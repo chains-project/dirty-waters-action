@@ -1,0 +1,42 @@
+name: 'Dirty Waters Analysis'
+description: 'Analyze software supply chain issues in your dependencies'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  project_repo:
+    description: 'Project repository name'
+    required: true
+  version_old:
+    description: 'Old release version to analyze'
+    required: true
+  version_new:
+    description: 'New release version for differential analysis'
+    required: false
+  package_manager:
+    description: 'Package manager used in the project'
+    required: true
+  fail_on_high_severity:
+    description: 'Break CI if high severity issues are found'
+    required: false
+    default: 'true'
+  comment_on_pr:
+    description: 'Post analysis results as a PR comment'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - '-p'
+    - '${{ inputs.project_repo }}'
+    - '-v'
+    - '${{ inputs.version_old }}'
+    - '-vn'
+    - '${{ inputs.version_new }}'
+    - '-pm'
+    - '${{ inputs.package_manager }}'
+    - '-s'
+    - '${{ inputs.version_new != '''' && ''-d'' || '''' }}'
