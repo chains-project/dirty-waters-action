@@ -8,22 +8,49 @@ if [ -z "$GITHUB_TOKEN" ]; then
 fi
 
 export GITHUB_API_TOKEN=$GITHUB_TOKEN
-
-# Change to the tool directory
-cd /app/dirty-waters/tool
-
 # Extract inputs from environment variables (GitHub Actions sets these automatically)
+DIRTY_WATERS_VERSION="${INPUT_DIRTY_WATERS_VERSION}"
 PROJECT_REPO="${INPUT_PROJECT_REPO}"
 VERSION_OLD="${INPUT_VERSION_OLD}"
 VERSION_NEW="${INPUT_VERSION_NEW}"
+DIFFERENTIAL_ANALYSIS="${INPUT_DIFFERENTIAL_ANALYSIS}"
 PACKAGE_MANAGER="${INPUT_PACKAGE_MANAGER}"
+# TODO: pnpm-scope
+NAME_MATCH="${INPUT_NAME_MATCH}"
+SPECIFIED_SMELLS="${INPUT_SPECIFIED_SMELLS}"
+DEBUG="${INPUT_DEBUG}"
+
+cd /app/dirty-waters/
+# Checkout to the desired version of Dirty Waters if provided
+if [ -n "$DIRTY_WATERS_VERSION" ]; then
+    git checkout "$DIRTY_WATERS_VERSION"
+fi
+# Change to the tool directory
+cd tool/
 
 # Build the command
 CMD="python main.py -p ${PROJECT_REPO} -v ${VERSION_OLD} -s -pm ${PACKAGE_MANAGER}"
 
 # Add differential analysis if version_new is provided
-if [ -n "$VERSION_NEW" ]; then
+if [ -n "$DIFFERENTIAL_ANALYSIS" ]; then
     CMD="$CMD -vn ${VERSION_NEW} -d"
+fi
+
+# TODO: Add pnpm-scope if provided
+
+# Add name matching if provided
+if [ -n "$NAME_MATCH" ]; then
+    CMD="$CMD -n"
+fi
+
+# Add specified smells if provided
+if [ -n "$SPECIFIED_SMELLS" ]; then
+    CMD="$CMD ${SPECIFIED_SMELLS}"
+fi
+
+# Add debug flag if provided
+if [ -n "$DEBUG" ]; then
+    CMD="$CMD --debug"
 fi
 
 echo "Running command: $CMD"
@@ -31,35 +58,46 @@ eval $CMD
 
 # Check if any reports were generated
 if [ ! -d "results" ]; then
-    echo "No reports were generated"
+    echo "An error occurred: no reports were generated"
     exit 1
 fi
 
 # Get the latest reports
 latest_static_report=$(ls -t results/*_static_summary.md | head -n1)
-latest_diff_report=$(ls -t results/*_diff_summary.md | head -n1 || true)
+latest_diff_report=$(ls -t results/*_diff_summary.md | head -n1 || false)
 
 # Prepare the comment content
 COMMENT="## Dirty Waters Analysis Results\n\n"
-COMMENT+="### Static Analysis\n"
-COMMENT+=$(cat "$latest_static_report")
-
 if [ -n "$latest_diff_report" ]; then
-    COMMENT+="\n\n### Differential Analysis\n"
+    COMMENT+="### Differential Analysis\n"
     COMMENT+=$(cat "$latest_diff_report")
+else
+    COMMENT+="### Static Analysis\n"
+    COMMENT+=$(cat "$latest_static_report")
 fi
 
-# Post comment if we're in a PR
-if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
-    PR_NUMBER=$(jq -r .pull_request.number "$GITHUB_EVENT_PATH")
-    REPO_FULL_NAME=$(jq -r .repository.full_name "$GITHUB_EVENT_PATH")
+# Get PR number if we're in a PR
+PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
 
+if [ "$PR_NUMBER" != "null" ]; then
     # Post comment to PR
-    curl -X POST \
+    curl -s -X POST \
         -H "Authorization: token $GITHUB_TOKEN" \
-        -H "Accept: application/vnd.github.v3+json" \
-        "https://api.github.com/repos/$REPO_FULL_NAME/issues/$PR_NUMBER/comments" \
-        -d "{\"body\":$(echo "$COMMENT" | jq -R -s .)}"
+        -H "Content-Type: application/json" \
+        -d "{\"body\":\"$COMMENT\"}" \
+        "https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments"
+elif [ "$INPUT_COMMENT_ON_COMMIT" == "true" ]; then
+    # Check if there are high severity issues
+    if [[ $(cat "$latest_static_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+        # Get the commit SHA
+        COMMIT_SHA=$(git rev-parse HEAD)
+        # Post comment on commit
+        curl -s -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"body\":\"$COMMENT\"}" \
+            "https://api.github.com/repos/$PROJECT_REPO/commits/$COMMIT_SHA/comments"
+    fi
 fi
 
 # Move reports to GitHub workspace
@@ -67,17 +105,30 @@ mv results/* $GITHUB_WORKSPACE/
 
 # Check for high severity issues if enabled
 if [ "$INPUT_FAIL_ON_HIGH_SEVERITY" == "true" ]; then
-    high_severity_count=0
-    no_source_code=$(grep -c "Packages with no Source Code URL(⚠️⚠️⚠️):" "$latest_static_report" || true)
-    github_404=$(grep -c "Packages with Github URLs that are 404(⚠️⚠️⚠️):" "$latest_static_report" || true)
-    inaccessible_tags=$(grep -c "Packages with inaccessible GitHub tags(⚠️⚠️⚠️):" "$latest_static_report" || true)
-
-    high_severity_count=$((no_source_code + github_404 + inaccessible_tags))
-
-    if [ $high_severity_count -gt 0 ]; then
-        echo "::error::Found $high_severity_count high severity supply chain issues!"
+    # Check for pattern "(⚠️⚠️⚠️): <number>", which may occur more than once. If any of the occurrences is greater than 0, fail the build
+    if [[ $(cat "$latest_static_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+        echo "High severity issues found. Failing the build"
         exit 1
     fi
 fi
 
+# For the remaining issues, we fail the build if INPUT_X_TO_FAIL is surpassed
+# First, we get the total number of packages, via searching for "Total packages in the supply chain: <number>"
+total_packages=$(cat "$latest_static_report" | grep -o "Total packages in the supply chain: [0-9]*" | grep -o "[0-9]*")
+# Then, for each severity level, we check if the number of issues surpasses the percentage threshold (INPUT_X_TO_FAIL)
+# If it does, we fail the build
+
+# Get the number of issues for each severity level
+for severity in "⚠️⚠️" "⚠️"; do
+    # For all occurrences of the pattern, we check if the number of issues surpasses the threshold\
+    # If it does, we fail the build
+    for count in $(cat "$latest_static_report" | grep -o "($severity): [0-9]*" | grep -o "[0-9]*"); do
+        if [[ $(echo "scale=2; $count / $total_packages * 100" | bc) -gt $INPUT_X_TO_FAIL ]]; then
+            echo "Number of $severity issues surpasses the threshold. Failing the build"
+            exit 1
+        fi
+    done
+done
+
 echo "Analysis completed successfully"
+exit 0
