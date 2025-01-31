@@ -5,38 +5,68 @@ branding:
   color: 'blue'
 
 inputs:
+  dirty_waters_version:
+    description: 'Dirty Waters version to use, defaults to latest'
+    required: false
+    default: 'HEAD'
   project_repo:
-    description: 'Project repository name'
+    description: 'Project repository path (as in GitHub)'
     required: true
   version_old:
-    description: 'Old release version to analyze'
-    required: true
+    description: 'Release version to analyze - old if differential analysis'
+    required: false
+    default: 'HEAD'
   version_new:
     description: 'New release version for differential analysis'
     required: false
+    default: 'HEAD^'
+  differential_analysis:
+    description: 'Whether to perform differential analysis'
+    required: false
+    default: 'true'
   package_manager:
     description: 'Package manager used in the project'
     required: true
+  name_match:
+    description: 'Compare the package names with the name in the in the package.json file. This option will slow down the execution time due to the API rate limit of code search'
+    required: false
+    default: 'false'
+  # TODO: pnpm-scope
+  specified_smells:
+    description: 'List of specified smells to analyze. Provide it as a space-separated list of smells (e.g., "--check-source-code --check-forks")'
+    required: false
+  debug:
+    description: 'Enable debug mode'
+    required: false
+    default: 'false'
   fail_on_high_severity:
     description: 'Break CI if high severity issues are found'
     required: false
     default: 'true'
-  comment_on_pr:
-    description: 'Post analysis results as a PR comment'
+  x_to_fail:
+    description: 'Percentage threshold for the number of non-high severity issues to fail the CI'
     required: false
-    default: 'true'
+    default: '5'
+  comment_on_commit:
+    description: 'Post analysis results as a commit comment if high severity issues are found'
+    required: false
+    default: 'false'
 
 runs:
   using: 'docker'
   image: 'Dockerfile'
-  args:
-    - '-p'
-    - '${{ inputs.project_repo }}'
-    - '-v'
-    - '${{ inputs.version_old }}'
-    - '-vn'
-    - '${{ inputs.version_new }}'
-    - '-pm'
-    - '${{ inputs.package_manager }}'
-    - '-s'
-    - '${{ inputs.version_new != '''' && ''-d'' || '''' }}'
+  env:
+    INPUT_DIRTY_WATERS_VERSION: ${{ inputs.dirty_waters_version }}
+    INPUT_PROJECT_REPO: ${{ inputs.project_repo }}
+    INPUT_VERSION_OLD: ${{ inputs.version_old }}
+    INPUT_VERSION_NEW: ${{ inputs.version_new }}
+    INPUT_DIFFERENTIAL_ANALYSIS: ${{ inputs.differential_analysis }}
+    INPUT_PACKAGE_MANAGER: ${{ inputs.package_manager }}
+    INPUT_NAME_MATCH: ${{ inputs.name_match }}
+    INPUT_PNPM_SCOPE: ${{ inputs.pnpm_scope }}
+    INPUT_SPECIFIED_SMELLS: ${{ inputs.specified_smells }}
+    INPUT_DEBUG: ${{ inputs.debug }}
+    INPUT_FAIL_ON_HIGH_SEVERITY: ${{ inputs.fail_on_high_severity }}
+    INPUT_X_TO_FAIL: ${{ inputs.x_to_fail }}
+    INPUT_COMMENT_ON_COMMIT: ${{ inputs.comment_on_commit }}
+    GITHUB_TOKEN: ${{ github.token }}
