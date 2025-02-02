@@ -18,6 +18,7 @@ on:
       - "**/yarn.lock"
       - "**/pnpm-lock.yaml"
       - "**/pom.xml"
+  workflow_dispatch:
 
 jobs:
   analyze:
@@ -42,25 +43,27 @@ jobs:
           RUNS=$(gh api repos/${{ github.repository }}/actions/workflows/${{ github.workflow }}/runs --jq '.total_count')
           echo "is_first_run=$([[ $RUNS -le 1 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v42
+      - name: Run Static Dirty Waters analysis
+        if: steps.check-first-run.outputs.is_first_run == 'true
+        uses: chains-project/dirty-waters-action@v1.0
         with:
-          files: |
-            **/package.json
-            **/package-lock.json
-            **/yarn.lock
-            **/pnpm-lock.yaml
-            **/pom.xml
+          # example args, change as needed
+          project_repo: ${{ github.repository }}
+          differential_analysis: false
+          package_manager: npm # Change this according to your project
+          comment_on_commit: true # Optional: comments on commits (outside PRs) if high severity issues are found
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Dirty Waters
-        if: steps.check-first-run.outputs.is_first_run == 'true' || steps.changed-files.outputs.any_changed == 'true'
+      - name: Run Differential Dirty Waters Analysis
+        if: ${{ !(steps.check-first-run.outputs.is_first_run == 'true') }}
         uses: chains-project/dirty-waters-action@v1.0
         with:
           # example args, change as needed
           project_repo: ${{ github.repository }}
           package_manager: npm # Change this according to your project
           comment_on_commit: true # Optional: comments on commits (outside PRs) if high severity issues are found
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
