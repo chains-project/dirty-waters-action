@@ -32,8 +32,8 @@ cd tool/
 # Build the command
 CMD="python main.py -p ${PROJECT_REPO} -v ${VERSION_OLD} -s -pm ${PACKAGE_MANAGER}"
 
-# Add differential analysis if version_new is provided
-if [ -n "$DIFFERENTIAL_ANALYSIS" ]; then
+# Add differential analysis if enabled
+if [ "$DIFFERENTIAL_ANALYSIS" = true ]; then
     CMD="$CMD -vn ${VERSION_NEW} -d"
 fi
 
