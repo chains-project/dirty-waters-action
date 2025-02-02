@@ -49,7 +49,7 @@ if [ -n "$SPECIFIED_SMELLS" ]; then
 fi
 
 # Add debug flag if provided
-if [ -n "$DEBUG" ]; then
+if [ "$DEBUG" = true ]; then
     CMD="$CMD --debug"
 fi
 
