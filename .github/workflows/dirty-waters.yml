@@ -63,5 +63,4 @@ jobs:
           project_repo: ${{ github.repository }}
           package_manager: npm # Change this according to your project
           comment_on_commit: true # Optional: comments on commits (outside PRs) if high severity issues are found
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
