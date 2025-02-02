@@ -18,7 +18,6 @@ on:
       - "**/yarn.lock"
       - "**/pnpm-lock.yaml"
       - "**/pom.xml"
-  workflow_dispatch:
 
 jobs:
   analyze:
