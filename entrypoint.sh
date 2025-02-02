@@ -2,13 +2,14 @@
 set -e
 
 # Check if GITHUB_TOKEN is set
-if [ -z "$GITHUB_TOKEN" ]; then
+if [ -z "$INPUT_GITHUB_TOKEN" ]; then
     echo "Error: GITHUB_TOKEN is not set"
     exit 1
 fi
 
-export GITHUB_API_TOKEN=$GITHUB_TOKEN
 # Extract inputs from environment variables (GitHub Actions sets these automatically)
+GITHUB_TOKEN="${INPUT_GITHUB_TOKEN}"
+export GITHUB_API_TOKEN=$GITHUB_TOKEN
 DIRTY_WATERS_VERSION="${INPUT_DIRTY_WATERS_VERSION}"
 PROJECT_REPO="${INPUT_PROJECT_REPO}"
 VERSION_OLD="${INPUT_VERSION_OLD}"

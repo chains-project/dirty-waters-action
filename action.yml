@@ -59,7 +59,7 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   env:
-    GITHUB_TOKEN: ${{ inputs.github_token }}
+    INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
     INPUT_DIRTY_WATERS_VERSION: ${{ inputs.dirty_waters_version }}
     INPUT_PROJECT_REPO: ${{ inputs.project_repo }}
     INPUT_VERSION_OLD: ${{ inputs.version_old }}
