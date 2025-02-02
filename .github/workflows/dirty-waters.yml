@@ -50,20 +50,18 @@ jobs:
         uses: chains-project/dirty-waters-action@v1.1
         with:
           # example args, change as needed
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           project_repo: ${{ github.repository }}
           differential_analysis: false
           package_manager: npm # Change this according to your project
           comment_on_commit: true # Optional: comments on commits (outside PRs) if high severity issues are found
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Differential Dirty Waters Analysis
         if: ${{ !(steps.check-first-run.outputs.is_first_run == 'true') }}
         uses: chains-project/dirty-waters-action@v1.1
         with:
           # example args, change as needed
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           project_repo: ${{ github.repository }}
           package_manager: npm # Change this according to your project
           comment_on_commit: true # Optional: comments on commits (outside PRs) if high severity issues are found
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
