@@ -68,14 +68,15 @@ COMMENT="## Dirty Waters Analysis Results\n\n"
 if [ "$DIFFERENTIAL_ANALYSIS" == "true" ]; then
     latest_diff_report=$(ls -t results/*/*_diff_summary.md | head -n1 || false)
     COMMENT+="### Differential Analysis\n"
-    COMMENT+=$(cat "$latest_diff_report")
     latest_report=$latest_diff_report
 else
     latest_static_report=$(ls -t results/*/*_static_summary.md | head -n1)
     COMMENT+="### Static Analysis\n"
-    COMMENT+=$(cat "$latest_static_report")
     latest_report=$latest_static_report
 fi
+#DEBUG PRINT BELOW
+echo "Found report at $latest_report"
+COMMENT+=$(cat "$latest_report")
 
 # Get PR number if we're in a PR
 PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
