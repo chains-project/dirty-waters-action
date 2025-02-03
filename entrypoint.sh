@@ -33,7 +33,7 @@ cd tool/
 CMD="python main.py -p ${PROJECT_REPO} -v ${VERSION_OLD} -s -pm ${PACKAGE_MANAGER}"
 
 # Add differential analysis if enabled
-if [ "$DIFFERENTIAL_ANALYSIS" = true ]; then
+if [ "$DIFFERENTIAL_ANALYSIS" == "true" ]; then
     CMD="$CMD -vn ${VERSION_NEW} -d"
 fi
 
@@ -50,7 +50,7 @@ if [ -n "$SPECIFIED_SMELLS" ]; then
 fi
 
 # Add debug flag if provided
-if [ "$DEBUG" = true ]; then
+if [ "$DEBUG" == "true" ]; then
     CMD="$CMD --debug"
 fi
 
@@ -65,7 +65,7 @@ fi
 
 # Prepare the comment content
 COMMENT="## Dirty Waters Analysis Results\n\n"
-if [ "$DIFFERENTIAL_ANALYSIS" = true ]; then
+if [ "$DIFFERENTIAL_ANALYSIS" == "true" ]; then
     latest_diff_report=$(ls -t results/*/*_diff_summary.md | head -n1 || false)
     COMMENT+="### Differential Analysis\n"
     COMMENT+=$(cat "$latest_diff_report")
