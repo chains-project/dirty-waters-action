@@ -64,8 +64,8 @@ if [ ! -d "results" ]; then
 fi
 
 # Get the latest reports
-latest_static_report=$(ls -t results/*_static_summary.md | head -n1)
-latest_diff_report=$(ls -t results/*_diff_summary.md | head -n1 || false)
+latest_static_report=$(ls -t results/*/*_static_summary.md | head -n1)
+latest_diff_report=$(ls -t results/*/*_diff_summary.md | head -n1 || false)
 
 # Prepare the comment content
 COMMENT="## Dirty Waters Analysis Results\n\n"
