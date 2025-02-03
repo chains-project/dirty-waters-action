@@ -63,18 +63,18 @@ if [ ! -d "results" ]; then
     exit 1
 fi
 
-# Get the latest reports
-latest_static_report=$(ls -t results/*/*_static_summary.md | head -n1)
-latest_diff_report=$(ls -t results/*/*_diff_summary.md | head -n1 || false)
-
 # Prepare the comment content
 COMMENT="## Dirty Waters Analysis Results\n\n"
-if [ -n "$latest_diff_report" ]; then
+if [ "$DIFFERENTIAL_ANALYSIS" = true ]; then
+    latest_diff_report=$(ls -t results/*/*_diff_summary.md | head -n1 || false)
     COMMENT+="### Differential Analysis\n"
     COMMENT+=$(cat "$latest_diff_report")
+    latest_report=$latest_diff_report
 else
+    latest_static_report=$(ls -t results/*/*_static_summary.md | head -n1)
     COMMENT+="### Static Analysis\n"
     COMMENT+=$(cat "$latest_static_report")
+    latest_report=$latest_static_report
 fi
 
 # Get PR number if we're in a PR
@@ -89,7 +89,7 @@ if [ "$PR_NUMBER" != "null" ]; then
         "https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments"
 elif [ "$INPUT_COMMENT_ON_COMMIT" == "true" ]; then
     # Check if there are high severity issues
-    if [[ $(cat "$latest_static_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+    if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
         # Get the commit SHA
         COMMIT_SHA=$(git rev-parse HEAD)
         # Post comment on commit
@@ -107,7 +107,7 @@ mv results/* $GITHUB_WORKSPACE/
 # Check for high severity issues if enabled
 if [ "$INPUT_FAIL_ON_HIGH_SEVERITY" == "true" ]; then
     # Check for pattern "(⚠️⚠️⚠️): <number>", which may occur more than once. If any of the occurrences is greater than 0, fail the build
-    if [[ $(cat "$latest_static_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+    if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
         echo "High severity issues found. Failing the build"
         exit 1
     fi
@@ -115,7 +115,7 @@ fi
 
 # For the remaining issues, we fail the build if INPUT_X_TO_FAIL is surpassed
 # First, we get the total number of packages, via searching for "Total packages in the supply chain: <number>"
-total_packages=$(cat "$latest_static_report" | grep -o "Total packages in the supply chain: [0-9]*" | grep -o "[0-9]*")
+total_packages=$(cat "$latest_report" | grep -o "Total packages in the supply chain: [0-9]*" | grep -o "[0-9]*")
 # Then, for each severity level, we check if the number of issues surpasses the percentage threshold (INPUT_X_TO_FAIL)
 # If it does, we fail the build
 
@@ -123,7 +123,7 @@ total_packages=$(cat "$latest_static_report" | grep -o "Total packages in the su
 for severity in "⚠️⚠️" "⚠️"; do
     # For all occurrences of the pattern, we check if the number of issues surpasses the threshold\
     # If it does, we fail the build
-    for count in $(cat "$latest_static_report" | grep -o "($severity): [0-9]*" | grep -o "[0-9]*"); do
+    for count in $(cat "$latest_report" | grep -o "($severity): [0-9]*" | grep -o "[0-9]*"); do
         if [[ $(echo "scale=2; $count / $total_packages * 100" | bc) -gt $INPUT_X_TO_FAIL ]]; then
             echo "Number of $severity issues surpasses the threshold. Failing the build"
             exit 1
