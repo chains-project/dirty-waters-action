@@ -26,7 +26,7 @@ inputs:
   differential_analysis:
     description: 'Whether to perform differential analysis'
     required: false
-    default: 'true'
+    default: 'false'
   package_manager:
     description: 'Package manager used in the project'
     required: true
@@ -50,6 +50,10 @@ inputs:
     description: 'Percentage threshold for the number of non-high severity issues to fail the CI'
     required: false
     default: '5'
+  allow_pr_comment:
+    description: 'Post analysis results as a PR comment if high severity issues are found'
+    required: false
+    default: 'true'
   comment_on_commit:
     description: 'Post analysis results as a commit comment if high severity issues are found'
     required: false
@@ -72,4 +76,5 @@ runs:
     INPUT_DEBUG: ${{ inputs.debug }}
     INPUT_FAIL_ON_HIGH_SEVERITY: ${{ inputs.fail_on_high_severity }}
     INPUT_X_TO_FAIL: ${{ inputs.x_to_fail }}
+    INPUT_ALLOW_PR_COMMENT: ${{ inputs.allow_pr_comment }}
     INPUT_COMMENT_ON_COMMIT: ${{ inputs.comment_on_commit }}

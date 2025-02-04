@@ -1,4 +1,4 @@
-#!/bin/bash
+#/usr/bin/env bash
 set -e
 
 # Check if GITHUB_TOKEN is set
@@ -20,6 +20,8 @@ PACKAGE_MANAGER="${INPUT_PACKAGE_MANAGER}"
 NAME_MATCH="${INPUT_NAME_MATCH}"
 SPECIFIED_SMELLS="${INPUT_SPECIFIED_SMELLS}"
 DEBUG="${INPUT_DEBUG}"
+# NO_GRADUAL_REPORT="${INPUT_NO_GRADUAL_REPORT}"
+ALLOW_PR_COMMENT="${INPUT_ALLOW_PR_COMMENT}"
 
 cd /app/dirty-waters/
 # Checkout to the desired version of Dirty Waters if provided
@@ -78,10 +80,13 @@ fi
 echo "Found report at $latest_report"
 COMMENT+=$(cat "$latest_report")
 
+# We cat the report to the console regardless
+cat "$latest_report"
+
 # Get PR number if we're in a PR
 PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
 
-if [ "$PR_NUMBER" != "null" ]; then
+if [ "$PR_NUMBER" != "null" && "$ALLOW_PR_COMMENT" == "true" ]; then
     # Post comment to PR
     curl -s -X POST \
         -H "Authorization: token $GITHUB_TOKEN" \

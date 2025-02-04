@@ -38,11 +38,12 @@ SSC issues currently checked for:
 | project_repo          | Repository name (owner/repo)                                                                       | Yes      | -              |
 | version_old           | Base version/ref to analyze,                                                                       | No       | HEAD           |
 | version_new           | New version/ref for diff analysis                                                                  | No       | HEAD^          |
-| differential_analysis | Whether to perform differential analysis (true/false)                                              | No       | true           |
+| differential_analysis | Whether to perform differential analysis (true/false)                                              | No       | false          |
 | package_manager       | Package manager (npm, yarn-classic, yarn-berry, pnpm, maven)                                       | Yes      | -              |
 | name_match            | Compare the package names with the name in the in the package.json file. Will slow down execution. | No       | false          |
 | specified_smells      | Specify the smells to check for                                                                    | No       | all            |
 | debug                 | Enable debug mode                                                                                  | No       | false          |
 | fail_on_high_severity | Fail CI on high severity issues                                                                    | No       | true           |
 | x_to_fail             | Percentage threshold to break CI on non-high severity issues (per type of issue)                   | No       | 5% of packages |
+| allow_pr_comment      | Comment on PR if high severity issues found                                                        | No       | true           |
 | comment_on_commit     | Comment on commit if high severity issues found                                                    | No       | false          |
