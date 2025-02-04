@@ -88,6 +88,7 @@ PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
 
 if [ "$PR_NUMBER" != "null" && "$ALLOW_PR_COMMENT" == "true" ]; then
     # Post comment to PR
+    echo "Commenting on https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments"
     curl -s -X POST \
         -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
@@ -98,6 +99,7 @@ elif [ "$INPUT_COMMENT_ON_COMMIT" == "true" ]; then
     if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
         # Get the commit SHA
         COMMIT_SHA=$(git rev-parse HEAD)
+        echo "Commenting on $COMMIT_SHA"
         # Post comment on commit
         curl -s -X POST \
             -H "Authorization: token $GITHUB_TOKEN" \
