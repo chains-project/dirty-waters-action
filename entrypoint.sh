@@ -30,6 +30,7 @@ if [ -n "$DIRTY_WATERS_VERSION" ]; then
 fi
 # Change to the tool directory
 cd tool/
+cp -r /cache/ cache/
 
 # Build the command
 CMD="python main.py -p ${PROJECT_REPO} -v ${VERSION_OLD} -s -pm ${PACKAGE_MANAGER}"
