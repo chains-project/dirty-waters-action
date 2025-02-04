@@ -17,7 +17,6 @@ WORKDIR /app/dirty-waters
 
 # Create cache directory with proper permissions
 RUN mkdir -p tool/cache && chmod 777 tool/cache
-RUN cp -r /cache tool/cache
 
 # Install dirty-waters and its dependencies
 RUN pip install -r requirements.txt
