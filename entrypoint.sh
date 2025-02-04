@@ -66,11 +66,11 @@ fi
 # Prepare the comment content
 COMMENT="## Dirty Waters Analysis Results\n\n"
 if [ "$DIFFERENTIAL_ANALYSIS" == "true" ]; then
-    latest_diff_report=$(ls -t results/*/*_diff_summary.md | head -n1 || false)
+    latest_diff_report=$(ls -t $PWD/results/*/*_diff_summary.md | head -n1 || false)
     COMMENT+="### Differential Analysis\n"
     latest_report=$latest_diff_report
 else
-    latest_static_report=$(ls -t results/*/*_static_summary.md | head -n1)
+    latest_static_report=$(ls -t $PWD/results/*/*_static_summary.md | head -n1)
     COMMENT+="### Static Analysis\n"
     latest_report=$latest_static_report
 fi
