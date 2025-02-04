@@ -103,7 +103,7 @@ elif [ "$INPUT_COMMENT_ON_COMMIT" == "true" ]; then
 fi
 
 # Move reports to GitHub workspace
-mv results/* $GITHUB_WORKSPACE/
+cp -r results/* $GITHUB_WORKSPACE/
 
 # Check for high severity issues if enabled
 if [ "$INPUT_FAIL_ON_HIGH_SEVERITY" == "true" ]; then
