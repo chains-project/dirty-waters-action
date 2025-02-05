@@ -30,7 +30,7 @@ if [ -n "$DIRTY_WATERS_VERSION" ]; then
 fi
 # Change to the tool directory
 cd tool/
-mkdir cache/
+mkdir -p cache/
 # This should allow for caching to be retrieved across runs
 cp "$GITHUB_WORKSPACE/tool/cache/*" cache/
 # DEBUG: Checking if cache was correctly copied
