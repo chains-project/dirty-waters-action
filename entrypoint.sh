@@ -31,7 +31,7 @@ fi
 # Change to the tool directory
 cd tool/
 # This should allow for caching to be retrieved across runs
-ln -s "$GITHUB_WORKSPACE/tool/cache" tool/cache
+ln -s "$GITHUB_WORKSPACE/tool/cache" cache/
 
 # Build the command
 CMD="python main.py -p ${PROJECT_REPO} -v ${VERSION_OLD} -s -pm ${PACKAGE_MANAGER}"
