@@ -31,7 +31,7 @@ fi
 # Change to the tool directory
 cd tool/
 # This should allow for caching to be retrieved across runs
-cp -r "$GITHUB_WORKSPACE/tool/cache" cache/
+cp -r "$GITHUB_WORKSPACE/tool/cache" .
 
 # Build the command
 CMD="python main.py -p ${PROJECT_REPO} -v ${VERSION_OLD} -s -pm ${PACKAGE_MANAGER}"
@@ -61,7 +61,7 @@ fi
 echo "Running command: $CMD"
 eval $CMD
 
-cp -r cache/ "$GITHUB_WORKSPACE/tool/cache"
+cp -r cache/ "$GITHUB_WORKSPACE/tool"
 
 # Check if any reports were generated
 if [ ! -d "results" ]; then
