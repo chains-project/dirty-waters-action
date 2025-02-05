@@ -33,6 +33,9 @@ cp -r "$GITHUB_WORKSPACE/tool/cache" .
 # Change to the tool directory
 cd tool/
 # DEBUG: Checking if cache was correctly copied
+echo "Printing cache inside GITHUB_WORKSPACE/"
+ls -la $GITHUB_WORKSPACE/tool/cache/
+echo "Printing cache inside tool/"
 ls -la cache/
 
 # Build the command
