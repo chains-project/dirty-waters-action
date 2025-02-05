@@ -28,10 +28,11 @@ cd /app/dirty-waters/
 if [ -n "$DIRTY_WATERS_VERSION" ]; then
     git checkout "$DIRTY_WATERS_VERSION"
 fi
-# This should allow for caching to be retrieved across runs
-cp -r "$GITHUB_WORKSPACE/tool/cache" .
 # Change to the tool directory
 cd tool/
+mkdir cache/
+# This should allow for caching to be retrieved across runs
+cp "$GITHUB_WORKSPACE/tool/cache/*" cache/
 # DEBUG: Checking if cache was correctly copied
 echo "Printing cache inside GITHUB_WORKSPACE/"
 ls -la $GITHUB_WORKSPACE/tool/cache/
