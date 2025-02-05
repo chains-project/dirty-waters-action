@@ -33,7 +33,7 @@ cp -r "$GITHUB_WORKSPACE/tool/cache" .
 # Change to the tool directory
 cd tool/
 # DEBUG: Checking if cache was correctly copied
-tree cache/
+ls -la cache/
 
 # Build the command
 CMD="python main.py -p ${PROJECT_REPO} -v ${VERSION_OLD} -s -pm ${PACKAGE_MANAGER}"
