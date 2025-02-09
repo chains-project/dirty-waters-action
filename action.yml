@@ -34,7 +34,9 @@ inputs:
     description: 'Compare the package names with the name in the in the package.json file. This option will slow down the execution time due to the API rate limit of code search'
     required: false
     default: 'false'
-  # TODO: pnpm-scope
+  pnpm_scope:
+    description: 'Extract dependencies from pnpm with a specific scope'
+    required: false
   specified_smells:
     description: 'List of specified smells to analyze. Provide it as a space-separated list of smells (e.g., "--check-source-code --check-forks")'
     required: false
