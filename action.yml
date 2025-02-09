@@ -42,6 +42,10 @@ inputs:
     description: 'Enable debug mode'
     required: false
     default: 'false'
+  no_gradual_report:
+    description: 'Disable gradual report functionality'
+    required: false
+    default: 'false'
   fail_on_high_severity:
     description: 'Break CI if high severity issues are found'
     required: false
@@ -74,6 +78,7 @@ runs:
     INPUT_PNPM_SCOPE: ${{ inputs.pnpm_scope }}
     INPUT_SPECIFIED_SMELLS: ${{ inputs.specified_smells }}
     INPUT_DEBUG: ${{ inputs.debug }}
+    INPUT_NO_GRADUAL_REPORT: ${{ inputs.no_gradual_report }}
     INPUT_FAIL_ON_HIGH_SEVERITY: ${{ inputs.fail_on_high_severity }}
     INPUT_X_TO_FAIL: ${{ inputs.x_to_fail }}
     INPUT_ALLOW_PR_COMMENT: ${{ inputs.allow_pr_comment }}

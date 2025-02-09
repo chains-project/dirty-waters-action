@@ -62,6 +62,11 @@ if [ "$DEBUG" == "true" ]; then
     CMD="$CMD --debug"
 fi
 
+# Add no gradual report flag if provided
+if [ "$NO_GRADUAL_REPORT" == "true" ]; then
+    CMD="$CMD --no-gradual-report"
+fi
+
 echo "Running command: $CMD"
 eval $CMD
 
