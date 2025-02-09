@@ -1,0 +1,85 @@
+name: 'Dirty Waters Analysis'
+description: 'Analyze software supply chain issues in your dependencies'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  github_token:
+    description: "GitHub token"
+    required: true
+  dirty_waters_version:
+    description: 'Dirty Waters version to use, defaults to latest'
+    required: false
+    default: 'HEAD'
+  project_repo:
+    description: 'Project repository path (as in GitHub)'
+    required: true
+  version_old:
+    description: 'Release version to analyze - old if differential analysis'
+    required: false
+    default: 'HEAD'
+  version_new:
+    description: 'New release version for differential analysis'
+    required: false
+    default: 'HEAD^'
+  differential_analysis:
+    description: 'Whether to perform differential analysis'
+    required: false
+    default: 'false'
+  package_manager:
+    description: 'Package manager used in the project'
+    required: true
+  name_match:
+    description: 'Compare the package names with the name in the in the package.json file. This option will slow down the execution time due to the API rate limit of code search'
+    required: false
+    default: 'false'
+  # TODO: pnpm-scope
+  specified_smells:
+    description: 'List of specified smells to analyze. Provide it as a space-separated list of smells (e.g., "--check-source-code --check-forks")'
+    required: false
+  debug:
+    description: 'Enable debug mode'
+    required: false
+    default: 'false'
+  no_gradual_report:
+    description: 'Disable gradual report functionality'
+    required: false
+    default: 'false'
+  fail_on_high_severity:
+    description: 'Break CI if high severity issues are found'
+    required: false
+    default: 'true'
+  x_to_fail:
+    description: 'Percentage threshold for the number of non-high severity issues to fail the CI'
+    required: false
+    default: '5'
+  allow_pr_comment:
+    description: 'Post analysis results as a PR comment if high severity issues are found'
+    required: false
+    default: 'true'
+  comment_on_commit:
+    description: 'Post analysis results as a commit comment if high severity issues are found'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+    INPUT_DIRTY_WATERS_VERSION: ${{ inputs.dirty_waters_version }}
+    INPUT_PROJECT_REPO: ${{ inputs.project_repo }}
+    INPUT_VERSION_OLD: ${{ inputs.version_old }}
+    INPUT_VERSION_NEW: ${{ inputs.version_new }}
+    INPUT_DIFFERENTIAL_ANALYSIS: ${{ inputs.differential_analysis }}
+    INPUT_PACKAGE_MANAGER: ${{ inputs.package_manager }}
+    INPUT_NAME_MATCH: ${{ inputs.name_match }}
+    INPUT_PNPM_SCOPE: ${{ inputs.pnpm_scope }}
+    INPUT_SPECIFIED_SMELLS: ${{ inputs.specified_smells }}
+    INPUT_DEBUG: ${{ inputs.debug }}
+    INPUT_NO_GRADUAL_REPORT: ${{ inputs.no_gradual_report }}
+    INPUT_FAIL_ON_HIGH_SEVERITY: ${{ inputs.fail_on_high_severity }}
+    INPUT_X_TO_FAIL: ${{ inputs.x_to_fail }}
+    INPUT_ALLOW_PR_COMMENT: ${{ inputs.allow_pr_comment }}
+    INPUT_COMMENT_ON_COMMIT: ${{ inputs.comment_on_commit }}
