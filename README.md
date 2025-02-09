@@ -29,8 +29,6 @@ SSC issues currently checked for:
 
 ### Inputs
 
-<!-- TODO: Raphina help me document pnpm scope, name match here -->
-
 | Input                 | Description                                                                                        | Required | Default        |
 | --------------------- | -------------------------------------------------------------------------------------------------- | -------- | -------------- |
 | github_token          |                                                                                                    | Yes      | -              |
@@ -41,8 +39,10 @@ SSC issues currently checked for:
 | differential_analysis | Whether to perform differential analysis (true/false)                                              | No       | false          |
 | package_manager       | Package manager (npm, yarn-classic, yarn-berry, pnpm, maven)                                       | Yes      | -              |
 | name_match            | Compare the package names with the name in the in the package.json file. Will slow down execution. | No       | false          |
+| pnpm_scope            | Extract dependencies from pnpm with a specific scope                                               |          | -              |
 | specified_smells      | Specify the smells to check for                                                                    | No       | all            |
 | debug                 | Enable debug mode                                                                                  | No       | false          |
+| no_gradual_report     | Disable gradual report functionality                                                               | No       | false          |
 | fail_on_high_severity | Fail CI on high severity issues                                                                    | No       | true           |
 | x_to_fail             | Percentage threshold to break CI on non-high severity issues (per type of issue)                   | No       | 5% of packages |
 | allow_pr_comment      | Comment on PR if high severity issues found                                                        | No       | true           |

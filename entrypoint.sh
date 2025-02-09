@@ -16,7 +16,7 @@ VERSION_OLD="${INPUT_VERSION_OLD}"
 VERSION_NEW="${INPUT_VERSION_NEW}"
 DIFFERENTIAL_ANALYSIS="${INPUT_DIFFERENTIAL_ANALYSIS}"
 PACKAGE_MANAGER="${INPUT_PACKAGE_MANAGER}"
-# TODO: pnpm-scope
+PNPM_SCOPE="${INPUT_PNPM_SCOPE}"
 NAME_MATCH="${INPUT_NAME_MATCH}"
 SPECIFIED_SMELLS="${INPUT_SPECIFIED_SMELLS}"
 DEBUG="${INPUT_DEBUG}"
@@ -45,11 +45,14 @@ if [ "$DIFFERENTIAL_ANALYSIS" == "true" ]; then
     CMD="$CMD -vn ${VERSION_NEW} -d"
 fi
 
-# TODO: Add pnpm-scope if provided
-
 # Add name matching if provided
 if [ -n "$NAME_MATCH" ]; then
     CMD="$CMD -n"
+fi
+
+# Add pnpm_scope if provided
+if [ -n "$PNPM_SCOPE" ]; then
+    CMD="$CMD --pnpm-scope $PNPM_SCOPE"
 fi
 
 # Add specified smells if provided
