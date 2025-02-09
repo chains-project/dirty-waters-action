@@ -39,7 +39,7 @@ SSC issues currently checked for:
 | differential_analysis | Whether to perform differential analysis (true/false)                                              | No       | false          |
 | package_manager       | Package manager (npm, yarn-classic, yarn-berry, pnpm, maven)                                       | Yes      | -              |
 | name_match            | Compare the package names with the name in the in the package.json file. Will slow down execution. | No       | false          |
-| pnpm_scope            | Extract dependencies from pnpm with a specific scope                                               |          | -              |
+| pnpm_scope            | Extract dependencies from pnpm with a specific scope                                               | No       | -              |
 | specified_smells      | Specify the smells to check for                                                                    | No       | all            |
 | debug                 | Enable debug mode                                                                                  | No       | false          |
 | no_gradual_report     | Disable gradual report functionality                                                               | No       | false          |
