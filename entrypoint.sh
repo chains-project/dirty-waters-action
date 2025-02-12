@@ -83,20 +83,16 @@ if [ ! -d "results" ]; then
     exit 1
 fi
 
-# Prepare the comment content
-COMMENT="## Dirty Waters Analysis Results\n\n"
 if [ "$DIFFERENTIAL_ANALYSIS" == "true" ]; then
     latest_diff_report=$(ls -t $PWD/results/*/*_diff_summary.md | head -n1 || false)
-    COMMENT+="### Differential Analysis\n"
     latest_report=$latest_diff_report
 else
     latest_static_report=$(ls -t $PWD/results/*/*_static_summary.md | head -n1)
-    COMMENT+="### Static Analysis\n"
     latest_report=$latest_static_report
 fi
 #DEBUG PRINT BELOW
 echo "Found report at $latest_report"
-COMMENT+=$(cat "$latest_report")
+COMMENT=$(cat "$latest_report")
 
 # We cat the report to the console regardless
 cat "$latest_report"
@@ -108,10 +104,10 @@ if [ "$PR_NUMBER" != "null" && "$ALLOW_PR_COMMENT" == "true" ]; then
     # Post comment to PR
     echo "Commenting on https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments"
     curl -s -X POST \
-        -H "Authorization: token $GITHUB_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d "{\"body\":\"$COMMENT\"}" \
-        "https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments"
+        -H "Accept: application/vnd.github.v3+json" \
+        -H "Authorization : token $GITHUB_TOKEN" \
+        "https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments" \
+        -d "{\"body\":\"$COMMENT\"}"
 elif [ "$COMMENT_ON_COMMIT" == "true" ]; then
     # Check if there are high severity issues
     echo "Checking if there are high severity issues to comment in commit"
@@ -119,10 +115,10 @@ elif [ "$COMMENT_ON_COMMIT" == "true" ]; then
         echo "Commenting on $LATEST_COMMIT_SHA"
         # Post comment on commit
         curl -s -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"body\":\"$COMMENT\"}" \
-            "https://api.github.com/repos/$PROJECT_REPO/commits/$LATEST_COMMIT_SHA/comments"
+            "https://api.github.com/repos/$PROJECT_REPO/commits/$LATEST_COMMIT_SHA/comments" \
+            -d "{\"body\":\"$COMMENT\"}"
     fi
 fi
 
