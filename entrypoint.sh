@@ -22,6 +22,8 @@ SPECIFIED_SMELLS="${INPUT_SPECIFIED_SMELLS}"
 DEBUG="${INPUT_DEBUG}"
 # NO_GRADUAL_REPORT="${INPUT_NO_GRADUAL_REPORT}"
 ALLOW_PR_COMMENT="${INPUT_ALLOW_PR_COMMENT}"
+COMMENT_ON_COMMIT="${INPUT_COMMENT_ON_COMMIT}"
+LATEST_COMMIT_SHA="${INPUT_LATEST_COMMIT_SHA}"
 
 cd /app/dirty-waters/
 # Checkout to the desired version of Dirty Waters if provided
@@ -81,20 +83,14 @@ if [ ! -d "results" ]; then
     exit 1
 fi
 
-# Prepare the comment content
-COMMENT="## Dirty Waters Analysis Results\n\n"
 if [ "$DIFFERENTIAL_ANALYSIS" == "true" ]; then
     latest_diff_report=$(ls -t $PWD/results/*/*_diff_summary.md | head -n1 || false)
-    COMMENT+="### Differential Analysis\n"
     latest_report=$latest_diff_report
 else
     latest_static_report=$(ls -t $PWD/results/*/*_static_summary.md | head -n1)
-    COMMENT+="### Static Analysis\n"
     latest_report=$latest_static_report
 fi
-#DEBUG PRINT BELOW
-echo "Found report at $latest_report"
-COMMENT+=$(cat "$latest_report")
+COMMENT=$(cat "$latest_report")
 
 # We cat the report to the console regardless
 cat "$latest_report"
@@ -102,26 +98,25 @@ cat "$latest_report"
 # Get PR number if we're in a PR
 PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
 
-if [ "$PR_NUMBER" != "null" && "$ALLOW_PR_COMMENT" == "true" ]; then
+if [[ "$PR_NUMBER" != "null" && "$ALLOW_PR_COMMENT" == "true" ]]; then
     # Post comment to PR
     echo "Commenting on https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments"
     curl -s -X POST \
+        -H "Accept: application/vnd.github.v3+json" \
         -H "Authorization: token $GITHUB_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d "{\"body\":\"$COMMENT\"}" \
-        "https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments"
-elif [ "$INPUT_COMMENT_ON_COMMIT" == "true" ]; then
+        "https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments" \
+        -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
+elif [ "$COMMENT_ON_COMMIT" == "true" ]; then
     # Check if there are high severity issues
-    if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
-        # Get the commit SHA
-        COMMIT_SHA=$(git rev-parse HEAD)
-        echo "Commenting on $COMMIT_SHA"
+    echo "Checking if there are high severity issues to comment in commit"
+    if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️) [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+        echo "Commenting on $LATEST_COMMIT_SHA"
         # Post comment on commit
         curl -s -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"body\":\"$COMMENT\"}" \
-            "https://api.github.com/repos/$PROJECT_REPO/commits/$COMMIT_SHA/comments"
+            "https://api.github.com/repos/$PROJECT_REPO/commits/$LATEST_COMMIT_SHA/comments" \
+            -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
     fi
 fi
 
@@ -131,7 +126,7 @@ cp -r results/* $GITHUB_WORKSPACE/
 # Check for high severity issues if enabled
 if [ "$INPUT_FAIL_ON_HIGH_SEVERITY" == "true" ]; then
     # Check for pattern "(⚠️⚠️⚠️): <number>", which may occur more than once. If any of the occurrences is greater than 0, fail the build
-    if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+    if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️) [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
         echo "High severity issues found. Failing the build"
         exit 1
     fi
@@ -147,7 +142,7 @@ total_packages=$(cat "$latest_report" | grep -o "Total packages in the supply ch
 for severity in "⚠️⚠️" "⚠️"; do
     # For all occurrences of the pattern, we check if the number of issues surpasses the threshold\
     # If it does, we fail the build
-    for count in $(cat "$latest_report" | grep -o "($severity): [0-9]*" | grep -o "[0-9]*"); do
+    for count in $(cat "$latest_report" | grep -o "($severity) [0-9]*" | grep -o "[0-9]*"); do
         if [[ $(echo "scale=2; $count / $total_packages * 100" | bc) -gt $INPUT_X_TO_FAIL ]]; then
             echo "Number of $severity issues surpasses the threshold. Failing the build"
             exit 1
