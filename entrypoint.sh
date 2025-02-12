@@ -22,6 +22,7 @@ SPECIFIED_SMELLS="${INPUT_SPECIFIED_SMELLS}"
 DEBUG="${INPUT_DEBUG}"
 # NO_GRADUAL_REPORT="${INPUT_NO_GRADUAL_REPORT}"
 ALLOW_PR_COMMENT="${INPUT_ALLOW_PR_COMMENT}"
+COMMENT_ON_COMMIT="${INPUT_COMMENT_ON_COMMIT}"
 
 cd /app/dirty-waters/
 # Checkout to the desired version of Dirty Waters if provided
@@ -110,8 +111,9 @@ if [ "$PR_NUMBER" != "null" && "$ALLOW_PR_COMMENT" == "true" ]; then
         -H "Content-Type: application/json" \
         -d "{\"body\":\"$COMMENT\"}" \
         "https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments"
-elif [ "$INPUT_COMMENT_ON_COMMIT" == "true" ]; then
+elif [ "$COMMENT_ON_COMMIT" == "true" ]; then
     # Check if there are high severity issues
+    echo "Checking if there are high severity issues to comment in commit"
     if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
         # Get the commit SHA
         COMMIT_SHA=$(git rev-parse HEAD)
