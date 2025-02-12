@@ -64,6 +64,9 @@ inputs:
     description: 'Post analysis results as a commit comment if high severity issues are found'
     required: false
     default: 'false'
+  latest_commit_sha:
+    description: 'Latest commit SHA from the project using this action, using for commenting on commits'
+    required: true
 
 runs:
   using: 'docker'
@@ -85,3 +88,4 @@ runs:
     INPUT_X_TO_FAIL: ${{ inputs.x_to_fail }}
     INPUT_ALLOW_PR_COMMENT: ${{ inputs.allow_pr_comment }}
     INPUT_COMMENT_ON_COMMIT: ${{ inputs.comment_on_commit }}
+    INPUT_LATEST_COMMIT_SHA: ${{ inputs.latest_commit_sha }}
