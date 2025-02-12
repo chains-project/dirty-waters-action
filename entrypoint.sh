@@ -114,7 +114,7 @@ if [ "$PR_NUMBER" != "null" && "$ALLOW_PR_COMMENT" == "true" ]; then
 elif [ "$COMMENT_ON_COMMIT" == "true" ]; then
     # Check if there are high severity issues
     echo "Checking if there are high severity issues to comment in commit"
-    if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+    if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️) [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
         # Get the commit SHA
         COMMIT_SHA=$(git rev-parse HEAD)
         echo "Commenting on $COMMIT_SHA"
@@ -133,7 +133,7 @@ cp -r results/* $GITHUB_WORKSPACE/
 # Check for high severity issues if enabled
 if [ "$INPUT_FAIL_ON_HIGH_SEVERITY" == "true" ]; then
     # Check for pattern "(⚠️⚠️⚠️): <number>", which may occur more than once. If any of the occurrences is greater than 0, fail the build
-    if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+    if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️) [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
         echo "High severity issues found. Failing the build"
         exit 1
     fi
@@ -149,7 +149,7 @@ total_packages=$(cat "$latest_report" | grep -o "Total packages in the supply ch
 for severity in "⚠️⚠️" "⚠️"; do
     # For all occurrences of the pattern, we check if the number of issues surpasses the threshold\
     # If it does, we fail the build
-    for count in $(cat "$latest_report" | grep -o "($severity): [0-9]*" | grep -o "[0-9]*"); do
+    for count in $(cat "$latest_report" | grep -o "($severity) [0-9]*" | grep -o "[0-9]*"); do
         if [[ $(echo "scale=2; $count / $total_packages * 100" | bc) -gt $INPUT_X_TO_FAIL ]]; then
             echo "Number of $severity issues surpasses the threshold. Failing the build"
             exit 1
