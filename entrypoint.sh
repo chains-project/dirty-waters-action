@@ -107,7 +107,7 @@ if [ "$PR_NUMBER" != "null" && "$ALLOW_PR_COMMENT" == "true" ]; then
         -H "Accept: application/vnd.github.v3+json" \
         -H "Authorization : token $GITHUB_TOKEN" \
         "https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments" \
-        -d "{\"body\":\"$COMMENT\"}"
+        -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
 elif [ "$COMMENT_ON_COMMIT" == "true" ]; then
     # Check if there are high severity issues
     echo "Checking if there are high severity issues to comment in commit"
@@ -118,7 +118,7 @@ elif [ "$COMMENT_ON_COMMIT" == "true" ]; then
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token $GITHUB_TOKEN" \
             "https://api.github.com/repos/$PROJECT_REPO/commits/$LATEST_COMMIT_SHA/comments" \
-            -d "{\"body\":\"$COMMENT\"}"
+            -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
     fi
 fi
 
