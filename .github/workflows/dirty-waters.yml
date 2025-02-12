@@ -51,27 +51,33 @@ jobs:
         shell: bash
 
       - name: Run Static Dirty Waters analysis
-        continue-on-error" true # Allows for cache to still be saved
+        id: static-analysis
+        continue-on-error: true # Allows for cache to still be saved
         if: steps.check-first-run.outputs.is_first_run == 'true'
-        uses: chains-project/dirty-waters-action@v1.1
+        uses: chains-project/dirty-waters-action@v1.4
         with:
           # example args, change as needed
           github_token: ${{ secrets.GITHUB_TOKEN }}
           project_repo: ${{ github.repository }}
           package_manager: npm # Change this according to your project
-          comment_on_commit: true # Optional: comments on commits (outside PRs) if high severity issues are found
+          allow_pr_comment: true # Optional: comments on PRs if high severity issues are found
+          comment_on_commit: true # Optional: comments on commits (if not PR/if above is false) if high severity issues are found
+          latest_commit_sha: ${{ github.sha }}
 
       - name: Run Differential Dirty Waters Analysis
-        continue-on-error" true # Allows for cache to still be saved
+        id: differential-analysis
+        continue-on-error: true # Allows for cache to still be saved
         if: ${{ !(steps.check-first-run.outputs.is_first_run == 'true') }}
-        uses: chains-project/dirty-waters-action@v1.1
+        uses: chains-project/dirty-waters-action@v1.4
         with:
           # example args, change as needed
           github_token: ${{ secrets.GITHUB_TOKEN }}
           project_repo: ${{ github.repository }}
           differential_analysis: true
           package_manager: npm # Change this according to your project
-          comment_on_commit: true # Optional: comments on commits (outside PRs) if high severity issues are found
+          allow_pr_comment: true # Optional: comments on PRs if high severity issues are found
+          comment_on_commit: true # Optional: comments on commits (if not PR/if above is false) if high severity issues are found
+          latest_commit_sha: ${{ github.sha }}
 
       - name: Save Dirty Waters database cache
         id: save-cache
@@ -79,3 +85,7 @@ jobs:
         with:
           path: tool/cache
           key: dirty-waters-cache-${{ runner.os }}-${{ github.repository }}-${{ github.sha }}
+
+      - name: Break CI if analyses fail
+        run: exit $((steps.static-analysis.outcome == 'failure' || steps.differential-analysis.outcome == 'failure'))
+        shell: bash
