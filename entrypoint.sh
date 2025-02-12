@@ -102,7 +102,7 @@ PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
 
 echo "PR_NUMBER: $PR_NUMBER"
 echo "ALLOW_PR_COMMENT: $ALLOW_PR_COMMENT"
-if [ "$PR_NUMBER" != "null" && "$ALLOW_PR_COMMENT" == "true" ]; then
+if [[ "$PR_NUMBER" != "null" && "$ALLOW_PR_COMMENT" == "true" ]]; then
     # Post comment to PR
     echo "Commenting on https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments"
     curl -s -X POST \
