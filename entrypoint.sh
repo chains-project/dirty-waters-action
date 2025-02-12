@@ -104,11 +104,11 @@ echo "PR_NUMBER: $PR_NUMBER"
 echo "ALLOW_PR_COMMENT: $ALLOW_PR_COMMENT"
 if [[ "$PR_NUMBER" != "null" && "$ALLOW_PR_COMMENT" == "true" ]]; then
     # Post comment to PR
-    echo "Commenting on https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments"
+    echo "Commenting on https://api.github.com/repos/$PROJECT_REPO/pulls/$PR_NUMBER/comments"
     curl -s -X POST \
         -H "Accept: application/vnd.github.v3+json" \
         -H "Authorization : token $GITHUB_TOKEN" \
-        "https://api.github.com/repos/$PROJECT_REPO/issues/$PR_NUMBER/comments" \
+        "https://api.github.com/repos/$PROJECT_REPO/pulls/$PR_NUMBER/comments" \
         -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
 elif [ "$COMMENT_ON_COMMIT" == "true" ]; then
     # Check if there are high severity issues
