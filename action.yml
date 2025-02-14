@@ -1,3 +1,4 @@
+# action.yml
 name: 'Dirty Waters Analysis'
 description: 'Analyze software supply chain issues in your dependencies'
 branding:
@@ -67,25 +68,66 @@ inputs:
   latest_commit_sha:
     description: 'Latest commit SHA from the project using this action, using for commenting on commits'
     required: true
+  cache_key:
+    description: 'Custom cache key for SQLite database'
+    required: false
+    default: ''
 
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
-  env:
-    INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
-    INPUT_DIRTY_WATERS_VERSION: ${{ inputs.dirty_waters_version }}
-    INPUT_PROJECT_REPO: ${{ inputs.project_repo }}
-    INPUT_VERSION_OLD: ${{ inputs.version_old }}
-    INPUT_VERSION_NEW: ${{ inputs.version_new }}
-    INPUT_DIFFERENTIAL_ANALYSIS: ${{ inputs.differential_analysis }}
-    INPUT_PACKAGE_MANAGER: ${{ inputs.package_manager }}
-    INPUT_NAME_MATCH: ${{ inputs.name_match }}
-    INPUT_PNPM_SCOPE: ${{ inputs.pnpm_scope }}
-    INPUT_SPECIFIED_SMELLS: ${{ inputs.specified_smells }}
-    INPUT_DEBUG: ${{ inputs.debug }}
-    INPUT_NO_GRADUAL_REPORT: ${{ inputs.no_gradual_report }}
-    INPUT_FAIL_ON_HIGH_SEVERITY: ${{ inputs.fail_on_high_severity }}
-    INPUT_X_TO_FAIL: ${{ inputs.x_to_fail }}
-    INPUT_ALLOW_PR_COMMENT: ${{ inputs.allow_pr_comment }}
-    INPUT_COMMENT_ON_COMMIT: ${{ inputs.comment_on_commit }}
-    INPUT_LATEST_COMMIT_SHA: ${{ inputs.latest_commit_sha }}
+  using: 'composite'
+  steps:
+    - name: Set up cache key
+      id: cache-key
+      shell: bash
+      run: |
+        if [ -z "${{ inputs.cache_key }}" ]; then
+          echo "cache_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ github.sha }}" >> $GITHUB_OUTPUT
+        else
+          echo "cache_key=${{ inputs.cache_key }}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Restore cache
+      uses: actions/cache/restore@v4
+      id: restore-cache
+      with:
+        path: tool/cache
+        key: ${{ steps.cache-key.outputs.cache_key }}
+        restore-keys: |
+          dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-
+
+    - name: Create cache directory
+      if: steps.restore-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: mkdir -p tool/cache
+
+    - name: Run analysis
+      uses: docker://ghcr.io/chains-project/dirty-waters:${{ inputs.dirty_waters_version }}
+      env:
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+        INPUT_DIRTY_WATERS_VERSION: ${{ inputs.dirty_waters_version }}
+        INPUT_PROJECT_REPO: ${{ inputs.project_repo }}
+        INPUT_VERSION_OLD: ${{ inputs.version_old }}
+        INPUT_VERSION_NEW: ${{ inputs.version_new }}
+        INPUT_DIFFERENTIAL_ANALYSIS: ${{ inputs.differential_analysis }}
+        INPUT_PACKAGE_MANAGER: ${{ inputs.package_manager }}
+        INPUT_NAME_MATCH: ${{ inputs.name_match }}
+        INPUT_PNPM_SCOPE: ${{ inputs.pnpm_scope }}
+        INPUT_SPECIFIED_SMELLS: ${{ inputs.specified_smells }}
+        INPUT_DEBUG: ${{ inputs.debug }}
+        INPUT_NO_GRADUAL_REPORT: ${{ inputs.no_gradual_report }}
+        INPUT_FAIL_ON_HIGH_SEVERITY: ${{ inputs.fail_on_high_severity }}
+        INPUT_X_TO_FAIL: ${{ inputs.x_to_fail }}
+        INPUT_ALLOW_PR_COMMENT: ${{ inputs.allow_pr_comment }}
+        INPUT_COMMENT_ON_COMMIT: ${{ inputs.comment_on_commit }}
+        INPUT_LATEST_COMMIT_SHA: ${{ inputs.latest_commit_sha }}
+
+    - name: Save cache
+      uses: actions/cache/save@v4
+      if: always()
+      with:
+        path: tool/cache
+        key: ${{ steps.cache-key.outputs.cache_key }}
+    
+    - name: Break CI if analyses fail
+      run: exit $((steps.static-analysis.outcome == 'failure' || steps.differential-analysis.outcome == 'failure'))
+      shell: bash
