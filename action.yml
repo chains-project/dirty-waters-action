@@ -111,6 +111,7 @@ runs:
         pip install -r requirements.txt
 
     - name: Run analysis
+      id: analysis
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
@@ -217,5 +218,5 @@ runs:
         key: dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ github.sha }}
     
     - name: Break CI if analyses fail
-      run: exit $((steps.static-analysis.outcome == 'failure' || steps.differential-analysis.outcome == 'failure'))
+      run: exit $(( steps.analysis.outcome == 'failure' ))
       shell: bash
