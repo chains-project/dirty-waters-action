@@ -48,3 +48,4 @@ SSC issues currently checked for:
 | allow_pr_comment      | Comment on PR if high severity issues found                                                        | No       | true           |
 | comment_on_commit     | Comment on commit if high severity issues found                                                    | No       | false          |
 | latest_commit_sha     | Latest commit SHA, used to comment on commits                                                      | Yes      | -              |
+| github_event_before   | GitHub event before SHA, to retrieve the previous cache key                                        | Yes      | -              |
