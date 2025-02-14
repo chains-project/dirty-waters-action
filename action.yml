@@ -84,7 +84,9 @@ runs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install -y git curl jq maven
+        sudo apt-get install -y git=1:2.34.1-1ubuntu1.9 curl=7.81.0-1ubuntu1.10 jq=1.6-2.1ubuntu3 maven=3.6.3-5 nodejs=12.22.9~dfsg-1ubuntu3 npm=8.5.1+ds-2
+        npm install -g pnpm@8.6.0
+        npm install -g yarn@1.22.19
 
     - name: Restore cache
       uses: actions/cache/restore@v4
