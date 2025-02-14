@@ -76,6 +76,17 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install system dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git curl jq maven
+        
     - name: Set up cache key
       id: cache-key
       shell: bash
@@ -100,31 +111,114 @@ runs:
       shell: bash
       run: mkdir -p tool/cache
 
-    - name: Set version
-      id: set-version
+    - name: Clone and setup Dirty Waters
       shell: bash
-      run: echo "dirty_waters_version=${{ inputs.dirty_waters_version }}" >> $GITHUB_ENV
+      run: |
+        git clone https://github.com/chains-project/dirty-waters.git
+        cd dirty-waters
+        if [ "${{ inputs.dirty_waters_version }}" != "HEAD" ]; then
+          git checkout ${{ inputs.dirty_waters_version }}
+        fi
+        pip install -r requirements.txt
 
     - name: Run analysis
-      uses: docker://ghcr.io/chains-project/dirty-waters:${{ env.dirty_waters_version }}
+      shell: bash
       env:
-        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
-        INPUT_DIRTY_WATERS_VERSION: ${{ inputs.dirty_waters_version }}
-        INPUT_PROJECT_REPO: ${{ inputs.project_repo }}
-        INPUT_VERSION_OLD: ${{ inputs.version_old }}
-        INPUT_VERSION_NEW: ${{ inputs.version_new }}
-        INPUT_DIFFERENTIAL_ANALYSIS: ${{ inputs.differential_analysis }}
-        INPUT_PACKAGE_MANAGER: ${{ inputs.package_manager }}
-        INPUT_NAME_MATCH: ${{ inputs.name_match }}
-        INPUT_PNPM_SCOPE: ${{ inputs.pnpm_scope }}
-        INPUT_SPECIFIED_SMELLS: ${{ inputs.specified_smells }}
-        INPUT_DEBUG: ${{ inputs.debug }}
-        INPUT_NO_GRADUAL_REPORT: ${{ inputs.no_gradual_report }}
-        INPUT_FAIL_ON_HIGH_SEVERITY: ${{ inputs.fail_on_high_severity }}
-        INPUT_X_TO_FAIL: ${{ inputs.x_to_fail }}
-        INPUT_ALLOW_PR_COMMENT: ${{ inputs.allow_pr_comment }}
-        INPUT_COMMENT_ON_COMMIT: ${{ inputs.comment_on_commit }}
-        INPUT_LATEST_COMMIT_SHA: ${{ inputs.latest_commit_sha }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        GITHUB_API_TOKEN: ${{ inputs.github_token }}
+      run: |
+        cd dirty-waters/tool
+        
+        # Copy cache if it exists
+        if [ -d "$GITHUB_WORKSPACE/tool/cache" ]; then
+          cp -r $GITHUB_WORKSPACE/tool/cache/ .
+        fi
+        
+        # Build command
+        CMD="python main.py -p ${{ inputs.project_repo }} -v ${{ inputs.version_old }} -s -pm ${{ inputs.package_manager }}"
+        
+        if [ "${{ inputs.differential_analysis }}" == "true" ]; then
+            CMD="$CMD -vn ${{ inputs.version_new }} -d"
+        fi
+        
+        if [ -n "${{ inputs.name_match }}" ]; then
+            CMD="$CMD -n"
+        fi
+        
+        if [ -n "${{ inputs.pnpm_scope }}" ]; then
+            CMD="$CMD --pnpm-scope ${{ inputs.pnpm_scope }}"
+        fi
+        
+        if [ -n "${{ inputs.specified_smells }}" ]; then
+            CMD="$CMD ${{ inputs.specified_smells }}"
+        fi
+        
+        if [ "${{ inputs.debug }}" == "true" ]; then
+            CMD="$CMD --debug"
+        fi
+        
+        if [ "${{ inputs.no_gradual_report }}" == "true" ]; then
+            CMD="$CMD --no-gradual-report"
+        fi
+        
+        echo "Running command: $CMD"
+        eval $CMD
+        
+        # Copy cache back
+        cp -r cache/ "$GITHUB_WORKSPACE/tool/"
+        
+        # Process results
+        if [ ! -d "results" ]; then
+            echo "An error occurred: no reports were generated"
+            exit 1
+        fi
+        
+        if [ "${{ inputs.differential_analysis }}" == "true" ]; then
+            latest_report=$(ls -t results/*/*_diff_summary.md | head -n1)
+        else
+            latest_report=$(ls -t results/*/*_static_summary.md | head -n1)
+        fi
+        
+        COMMENT=$(cat "$latest_report")
+        
+        # Handle PR comments
+        PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
+        if [[ "$PR_NUMBER" != "null" && "${{ inputs.allow_pr_comment }}" == "true" ]]; then
+            curl -s -X POST \
+                -H "Accept: application/vnd.github.v3+json" \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments" \
+                -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
+        elif [ "${{ inputs.comment_on_commit }}" == "true" ]; then
+            if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️) [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+                curl -s -X POST \
+                    -H "Accept: application/vnd.github.v3+json" \
+                    -H "Authorization: token $GITHUB_TOKEN" \
+                    "https://api.github.com/repos/${{ inputs.project_repo }}/commits/${{ inputs.latest_commit_sha }}/comments" \
+                    -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
+            fi
+        fi
+        
+        # Copy results
+        cp -r results/* "$GITHUB_WORKSPACE/"
+        
+        # Check for high severity issues
+        if [ "${{ inputs.fail_on_high_severity }}" == "true" ]; then
+            if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️) [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+                echo "High severity issues found. Failing the build"
+                exit 1
+            fi
+        fi
+        
+        total_packages=$(cat "$latest_report" | grep -o "Total packages in the supply chain: [0-9]*" | grep -o "[0-9]*")
+        for severity in "⚠️⚠️" "⚠️"; do
+            for count in $(cat "$latest_report" | grep -o "($severity) [0-9]*" | grep -o "[0-9]*"); do
+                if [[ $(echo "scale=2; $count / $total_packages * 100" | bc) -gt ${{ inputs.x_to_fail }} ]]; then
+                    echo "Number of $severity issues surpasses the threshold. Failing the build"
+                    exit 1
+                fi
+            done
+        done
 
     - name: Save cache
       uses: actions/cache/save@v4
