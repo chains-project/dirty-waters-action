@@ -103,10 +103,10 @@ runs:
     - name: Set version
       id: set-version
       shell: bash
-      run: echo "dirty-waters-version=${{ inputs.dirty_waters_version }}" >> $GITHUB_ENV
+      run: echo "dirty_waters_version=${{ inputs.dirty_waters_version }}" >> $GITHUB_ENV
 
     - name: Run analysis
-      uses: docker://ghcr.io/chains-project/dirty-waters:${{ env.dirty-waters-version }}
+      uses: docker://ghcr.io/chains-project/dirty-waters:${{ env.dirty_waters_version }}
       env:
         INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
         INPUT_DIRTY_WATERS_VERSION: ${{ inputs.dirty_waters_version }}
