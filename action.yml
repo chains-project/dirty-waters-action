@@ -173,6 +173,7 @@ runs:
         fi
         
         COMMENT=$(cat "$latest_report")
+        cat "$latest_report" # Debug purposes: we always paste it in the logs
         
         # Handle PR comments
         PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
