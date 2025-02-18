@@ -71,6 +71,10 @@ inputs:
   github_event_before:
     description: 'GitHub event before SHA, to retrieve the previous cache key'
     required: true
+  ignore_cache:
+    description: 'Ignore the repository cache for this run'
+    required: false
+    default: 'false'
 
 runs:
   using: 'composite'
@@ -92,11 +96,10 @@ runs:
     - name: Restore cache
       uses: actions/cache/restore@v4
       id: restore-cache
+      if: inputs.ignore_cache != 'true'
       with:
         path: tool/cache
         key: dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ inputs.github_event_before }}
-        restore-keys: |
-          dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-
 
     - name: Create cache directory
       if: steps.restore-cache.outputs.cache-hit != 'true'

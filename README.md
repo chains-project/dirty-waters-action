@@ -49,3 +49,4 @@ SSC issues currently checked for:
 | comment_on_commit     | Comment on commit if high severity issues found                                                    | No       | false          |
 | latest_commit_sha     | Latest commit SHA, used to comment on commits                                                      | Yes      | -              |
 | github_event_before   | GitHub event before SHA, to retrieve the previous cache key                                        | Yes      | -              |
+| ignore_cache          | Ignore the repository cache for this run (true/false)                                              | No       | false          |
