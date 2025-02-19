@@ -142,7 +142,7 @@ runs:
         fi
 
         # Build command
-        CMD="python main.py -p ${{ inputs.project_repo }} -v ${{ inputs.version_old }} -s -pm ${{ inputs.package_manager }}"
+        CMD="python main.py -p ${{ inputs.project_repo }} -v ${{ inputs.version_old }} -pm ${{ inputs.package_manager }}"
 
         if [ "${{ inputs.differential_analysis }}" == "true" ]; then
             CMD="$CMD -vn ${{ inputs.version_new }} -d"
