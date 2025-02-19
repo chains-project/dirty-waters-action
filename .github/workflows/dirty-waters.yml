@@ -23,6 +23,8 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    permissions:
+      persist-credentials: false
     steps:
       - uses: actions/checkout@v4
         with:
