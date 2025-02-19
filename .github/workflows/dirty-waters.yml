@@ -2,17 +2,12 @@ name: Dirty Waters Analysis
 
 on:
   pull_request:
-    paths:
-      - "**/package.json"
-      - "**/package-lock.json"
-      - "**/yarn.lock"
-      - "**/pnpm-lock.yaml"
-      - "**/pom.xml"
   push:
     branches:
       - main
       - master
     paths:
+      # Include the one(s) relevant for your use case
       - "**/package.json"
       - "**/package-lock.json"
       - "**/yarn.lock"
