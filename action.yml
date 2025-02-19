@@ -58,11 +58,11 @@ inputs:
     required: false
     default: '5'
   allow_pr_comment:
-    description: 'Post analysis results as a PR comment if high severity issues are found'
+    description: 'Post analysis results as a PR comment if CI breaks'
     required: false
     default: 'true'
   comment_on_commit:
-    description: 'Post analysis results as a commit comment if high severity issues are found'
+    description: 'Post analysis results as a commit comment if CI breaks'
     required: false
     default: 'false'
   latest_commit_sha:
@@ -124,70 +124,99 @@ runs:
         GITHUB_API_TOKEN: ${{ inputs.github_token }}
       run: |
         cd dirty-waters/tool
-        
+
         # Copy cache if it exists
         if [ -d "$GITHUB_WORKSPACE/tool/cache" ]; then
           cp -r $GITHUB_WORKSPACE/tool/cache/ .
         fi
-        
+
         # Build command
         CMD="python main.py -p ${{ inputs.project_repo }} -v ${{ inputs.version_old }} -s -pm ${{ inputs.package_manager }}"
-        
+
         if [ "${{ inputs.differential_analysis }}" == "true" ]; then
             CMD="$CMD -vn ${{ inputs.version_new }} -d"
         fi
-        
+
         if [ -n "${{ inputs.name_match }}" ]; then
             CMD="$CMD -n"
         fi
-        
+
         if [ -n "${{ inputs.pnpm_scope }}" ]; then
             CMD="$CMD --pnpm-scope ${{ inputs.pnpm_scope }}"
         fi
-        
+
         if [ -n "${{ inputs.specified_smells }}" ]; then
             CMD="$CMD ${{ inputs.specified_smells }}"
         fi
-        
+
         if [ "${{ inputs.debug }}" == "true" ]; then
             CMD="$CMD --debug"
         fi
-        
+
         if [ "${{ inputs.no_gradual_report }}" == "true" ]; then
             CMD="$CMD --no-gradual-report"
         fi
-        
+
         echo "Running command: $CMD"
         eval $CMD
-        
+
         # Copy cache back
         cp -r cache/ "$GITHUB_WORKSPACE/tool/"
-        
+
         # Process results
         if [ ! -d "results" ]; then
             echo "An error occurred: no reports were generated"
             exit 1
         fi
-        
+
         if [ "${{ inputs.differential_analysis }}" == "true" ]; then
             latest_report=$(ls -t results/*/*_diff_summary.md | head -n1)
         else
             latest_report=$(ls -t results/*/*_static_summary.md | head -n1)
         fi
-        
+
         COMMENT=$(cat "$latest_report")
         cat "$latest_report" # Debug purposes: we always paste it in the logs
-        
-        # Handle PR comments
-        PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
-        if [[ "$PR_NUMBER" != "null" && "${{ inputs.allow_pr_comment }}" == "true" ]]; then
-            curl -s -X POST \
-                -H "Accept: application/vnd.github.v3+json" \
-                -H "Authorization: token $GITHUB_TOKEN" \
-                "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments" \
-                -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
-        elif [ "${{ inputs.comment_on_commit }}" == "true" ]; then
+
+        # Check for CI failure conditions
+        CI_WILL_FAIL=0
+
+        # Check for high severity issues
+        if [ "${{ inputs.fail_on_high_severity }}" == "true" ]; then
             if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️) [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+                echo "High severity issues found. CI will fail."
+                CI_WILL_FAIL=1
+            fi
+        fi
+
+        # Only check for threshold violations if we haven't already decided to fail
+        if [ $CI_WILL_FAIL -eq 0 ]; then
+            total_packages=$(cat "$latest_report" | grep -o "Total packages in the supply chain: [0-9]*" | grep -o "[0-9]*")
+            for severity in "⚠️⚠️⚠️" "⚠️⚠️" "⚠️"; do
+                for count in $(cat "$latest_report" | grep -o "($severity) [0-9]*" | grep -o "[0-9]*"); do
+                    if [[ $(echo "scale=2; $count / $total_packages * 100" | bc) -gt ${{ inputs.x_to_fail }} ]]; then
+                        echo "Number of $severity issues surpasses the threshold. CI will fail."
+                        CI_WILL_FAIL=1
+                        break 2  # Break both loops once we know we'll fail
+                    fi
+                done
+            done
+        fi
+
+        # Handle comments only if CI will fail
+        if [ $CI_WILL_FAIL -eq 1 ]; then
+            # Handle PR comments
+            PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
+            if [[ "$PR_NUMBER" != "null" && "${{ inputs.allow_pr_comment }}" == "true" ]]; then
+                curl -s -X POST \
+                    -H "Accept: application/vnd.github.v3+json" \
+                    -H "Authorization: token $GITHUB_TOKEN" \
+                    "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments" \
+                    -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
+            fi
+
+            # Handle commit comments
+            if [ "${{ inputs.comment_on_commit }}" == "true" ]; then
                 curl -s -X POST \
                     -H "Accept: application/vnd.github.v3+json" \
                     -H "Authorization: token $GITHUB_TOKEN" \
@@ -195,27 +224,14 @@ runs:
                     -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
             fi
         fi
-        
+
         # Copy results
         cp -r results/* "$GITHUB_WORKSPACE/"
-        
-        # Check for high severity issues
-        if [ "${{ inputs.fail_on_high_severity }}" == "true" ]; then
-            if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️) [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
-                echo "High severity issues found. Failing the build"
-                exit 1
-            fi
+
+        # Exit with failure if CI_WILL_FAIL is set
+        if [ $CI_WILL_FAIL -eq 1 ]; then
+            exit 1
         fi
-        
-        total_packages=$(cat "$latest_report" | grep -o "Total packages in the supply chain: [0-9]*" | grep -o "[0-9]*")
-        for severity in "⚠️⚠️" "⚠️"; do
-            for count in $(cat "$latest_report" | grep -o "($severity) [0-9]*" | grep -o "[0-9]*"); do
-                if [[ $(echo "scale=2; $count / $total_packages * 100" | bc) -gt ${{ inputs.x_to_fail }} ]]; then
-                    echo "Number of $severity issues surpasses the threshold. Failing the build"
-                    exit 1
-                fi
-            done
-        done
 
     - name: Save cache
       uses: actions/cache/save@v4
@@ -223,7 +239,7 @@ runs:
       with:
         path: tool/cache
         key: dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ github.sha }}
-    
+
     - name: Break CI if analyses fail
       run: exit $(( steps.analysis.outcome == 'failure' ))
       shell: bash

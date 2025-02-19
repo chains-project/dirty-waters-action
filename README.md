@@ -6,13 +6,11 @@ Add this workflow to your repository to analyze dependencies in your pull reques
 
 The action will:
 
-<!-- TODO: make sure this first point is correct -->
-
-1. Run on commits that modify dependency files (OR in the first commit after the action is added)
-2. Analyze dependencies for software supply chain issues
+1. Run on commits that modify dependency files
+2. Analyze dependencies for software supply chain smells
 3. Post results:
-   1. If in a PR, will post the report as a comment
-   2. Otherwise, results are available in the action logs; if high severity issues are found, the report will be posted as a comment in the commit, if enabled
+   1. If in a PR, will post the report as a comment by default if CI fails
+   2. Otherwise, results are available in the action logs; if CI fails, the report may also be posted as a comment in the commit, if enabled
 4. Break CI if high severity issues are found, if enabled
 
 As an important note, **the first time you run this action, it _will_ take quite some time**!
@@ -45,8 +43,8 @@ SSC issues currently checked for:
 | no_gradual_report     | Disable gradual report functionality                                                               | No       | false          |
 | fail_on_high_severity | Fail CI on high severity issues                                                                    | No       | true           |
 | x_to_fail             | Percentage threshold to break CI on non-high severity issues (per type of issue)                   | No       | 5% of packages |
-| allow_pr_comment      | Comment on PR if high severity issues found                                                        | No       | true           |
-| comment_on_commit     | Comment on commit if high severity issues found                                                    | No       | false          |
+| allow_pr_comment      | Post analysis results as a PR comment if CI breaks                                                 | No       | true           |
+| comment_on_commit     | Post analysis results as a commit comment if CI breaks                                             | No       | false          |
 | latest_commit_sha     | Latest commit SHA, used to comment on commits                                                      | Yes      | -              |
 | github_event_before   | GitHub event before SHA, to retrieve the previous cache key                                        | Yes      | -              |
 | ignore_cache          | Ignore the repository cache for this run (true/false)                                              | No       | false          |
