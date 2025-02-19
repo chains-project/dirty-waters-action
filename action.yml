@@ -93,6 +93,17 @@ runs:
         npm install -g pnpm
         npm install -g yarn
 
+    - name: Set commit SHA
+      # Required because of isolation issues in PRs
+      id: set-sha
+      shell: bash
+      run: |
+        if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+          echo "commit_sha=$(jq -r .pull_request.head.sha $GITHUB_EVENT_PATH)" >> $GITHUB_OUTPUT
+        else
+          echo "commit_sha=$GITHUB_SHA" >> $GITHUB_OUTPUT
+        fi
+
     - name: Restore cache
       uses: actions/cache/restore@v4
       id: restore-cache
@@ -238,7 +249,7 @@ runs:
       if: always()
       with:
         path: tool/cache
-        key: dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ github.sha }}
+        key: dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ steps.set-sha.outputs.commit_sha }}
 
     - name: Break CI if analyses fail
       run: exit $(( steps.analysis.outcome == 'failure' ))
