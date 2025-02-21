@@ -47,12 +47,9 @@ jobs:
           # example args, change as needed
           github_token: ${{ secrets.GITHUB_TOKEN }}
           dirty_waters_version: v0.49.0
-          project_repo: ${{ github.repository }}
           package_manager: npm # Change this according to your project
           allow_pr_comment: true # Optional: comments on PRs if high severity issues are found
           comment_on_commit: true # Optional: comments on commits (if not PR/if above is false) if high severity issues are found
-          latest_commit_sha: ${{ github.sha }}
-          github_event_before: ${{ github.event.before }}
           ignore_cache: ${{ github.event.inputs.ignore_cache }}
 
       - name: Run Differential Dirty Waters Analysis
@@ -63,11 +60,8 @@ jobs:
           # example args, change as needed
           github_token: ${{ secrets.GITHUB_TOKEN }}
           dirty_waters_version: v0.49.0
-          project_repo: ${{ github.repository }}
           differential_analysis: true
           package_manager: npm # Change this according to your project
           allow_pr_comment: true # Optional: comments on PRs if high severity issues are found
           comment_on_commit: true # Optional: comments on commits (if not PR/if above is false) if high severity issues are found
-          latest_commit_sha: ${{ github.sha }}
-          github_event_before: ${{ github.event.before }}
           ignore_cache: ${{ github.event.inputs.ignore_cache }}

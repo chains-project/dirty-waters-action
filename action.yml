@@ -15,7 +15,8 @@ inputs:
     default: 'HEAD'
   project_repo:
     description: 'Project repository path (as in GitHub)'
-    required: true
+    required: false
+    default: '${{ github.repository }}'
   version_old:
     description: 'Release version to analyze - old if differential analysis'
     required: false
@@ -67,10 +68,12 @@ inputs:
     default: 'false'
   latest_commit_sha:
     description: 'Latest commit SHA from the project using this action, using for commenting on commits'
-    required: true
+    required: false
+    default: '${{ github.sha }}'
   github_event_before:
     description: 'GitHub event before SHA, to retrieve the previous cache key'
-    required: true
+    required: false
+    default: '${{ github.event.before }}'
   ignore_cache:
     description: 'Ignore the repository cache for this run'
     required: false
