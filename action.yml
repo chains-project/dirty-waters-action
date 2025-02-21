@@ -225,10 +225,13 @@ runs:
             # Handle PR comments
             PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
             if [[ "$PR_NUMBER" != "null" && "${{ inputs.allow_pr_comment }}" == "true" ]]; then
+                # make a new comment with the report in the body if no comment from this action exists;
+                # if a comment from this action exists, edit it
+                COMMENT_ID=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments" | jq -r ".[] | select(.user.login == \"github-actions[bot]\") | select(.body | contains(\"Dirty Waters Analysis\")) | .id")
                 curl -s -X POST \
                     -H "Accept: application/vnd.github.v3+json" \
                     -H "Authorization: token $GITHUB_TOKEN" \
-                    "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments" \
+                    "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments/${COMMENT_ID}" \
                     -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
             fi
 
