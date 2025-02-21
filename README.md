@@ -2,7 +2,7 @@
 
 This action runs [Dirty Waters](https://github.com/chains-project/dirty-waters) on your repository to analyze dependencies for Software Supply Chain (SSC) issues.
 Add this workflow to your repository to analyze dependencies in your pull requests
-(change/add inputs as needed -- details in [action.yml](./action.yml)). An example of a workflow that uses this action is available in [.github/workflows/dirty-waters.yml](./.github/workflows/dirty-waters.yml).
+(change/add inputs as needed -- details in [action.yml](./action.yml)). An example of a workflow that uses this action is available in [example_workflow.yml](./example_workflow.yml).
 
 The action will:
 
