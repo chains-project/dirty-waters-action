@@ -83,7 +83,7 @@ runs:
   using: 'composite'
   steps:
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v5.4.0
       with:
         python-version: '3.12'
 
@@ -108,7 +108,7 @@ runs:
         fi
 
     - name: Restore cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v4.2.1
       id: restore-cache
       if: inputs.ignore_cache != 'true'
       with:
@@ -248,7 +248,7 @@ runs:
         fi
 
     - name: Save cache
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v4.2.1
       if: always()
       with:
         path: tool/cache

@@ -12,7 +12,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
         with:
           fetch-depth: 0
 
@@ -26,7 +26,7 @@ jobs:
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_ENV
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v5.1.0
         with:
           commit_message: "Bump dirty-waters-action version to ${{ env.commit_sha }}"
           branch: ${{ github.head_ref }}
