@@ -261,5 +261,6 @@ runs:
         key: dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ steps.set-sha.outputs.commit_sha }}
 
     - name: Break CI if analyses fail
-      run: exit $(( steps.analysis.outcome == 'failure' ))
+      run: |
+        [[ "${{ steps.analysis.outcome }}" == "failure" ]] && exit 1 || exit 0
       shell: bash
