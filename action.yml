@@ -239,7 +239,7 @@ runs:
                     HTTP_METHOD="POST"
                 else
                     # Comment exists - edit it
-                    COMMENT_URL="https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments/${COMMENT_ID}"
+                    COMMENT_URL="https://api.github.com/repos/${{ inputs.project_repo }}/issues/comments/${COMMENT_ID}"
                     HTTP_METHOD="PATCH"  # Use PATCH to update an existing comment
                 fi
 
