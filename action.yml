@@ -229,14 +229,27 @@ runs:
             # Handle PR comments
             PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
             if [[ "$PR_NUMBER" != "null" && "${{ inputs.allow_pr_comment }}" == "true" ]]; then
-                # make a new comment with the report in the body if no comment from this action exists;
-                # if a comment from this action exists, edit it
+                # Check if a comment from this action exists
                 COMMENT_ID=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments" | jq -r ".[] | select(.user.login == \"github-actions[bot]\") | select(.body | contains(\"Dirty Waters Analysis\")) | .id")
-                echo "[DEBUG] Commenting on PR, comment ID is $COMMENT_ID"
-                curl -s -X POST \
+
+                # Set the appropriate URL and HTTP method based on whether a comment exists
+                if [[ -z "$COMMENT_ID" ]]; then
+                    # No existing comment - create new one
+                    COMMENT_URL="https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments"
+                    HTTP_METHOD="POST"
+                else
+                    # Comment exists - edit it
+                    COMMENT_URL="https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments/${COMMENT_ID}"
+                    HTTP_METHOD="PATCH"  # Use PATCH to update an existing comment
+                fi
+
+                echo "[DEBUG] ${HTTP_METHOD} comment to $COMMENT_URL"
+
+                # Single curl command using the determined URL and method
+                curl -s -X $HTTP_METHOD \
                     -H "Accept: application/vnd.github.v3+json" \
                     -H "Authorization: token $GITHUB_TOKEN" \
-                    "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments/${COMMENT_ID}" \
+                    "$COMMENT_URL" \
                     -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
             fi
 
