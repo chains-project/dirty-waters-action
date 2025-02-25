@@ -200,7 +200,8 @@ runs:
 
         # Check for high severity issues
         if [ "${{ inputs.fail_on_high_severity }}" == "true" ]; then
-            if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️) [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+            echo "[DEBUG] Fails on high severity, checking for any high severity issues"
+            if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
                 echo "High severity issues found. CI will fail."
                 CI_WILL_FAIL=1
             fi
@@ -208,9 +209,11 @@ runs:
 
         # Only check for threshold violations if we haven't already decided to fail
         if [ $CI_WILL_FAIL -eq 0 ]; then
+            echo "[DEBUG] Haven't decided to fail yet, checking for threshold being surpassed"
             total_packages=$(cat "$latest_report" | grep -o "Total packages in the supply chain: [0-9]*" | grep -o "[0-9]*")
             for severity in "⚠️⚠️⚠️" "⚠️⚠️" "⚠️"; do
-                for count in $(cat "$latest_report" | grep -o "($severity) [0-9]*" | grep -o "[0-9]*"); do
+                for count in $(cat "$latest_report" | grep -o "($severity): [0-9]*" | grep -o "[0-9]*"); do
+                    echo "[DEBUG] Count for $severity is $count"
                     if [[ $(echo "scale=2; $count / $total_packages * 100" | bc) -gt ${{ inputs.x_to_fail }} ]]; then
                         echo "Number of $severity issues surpasses the threshold. CI will fail."
                         CI_WILL_FAIL=1
@@ -222,6 +225,7 @@ runs:
 
         # Handle comments only if CI will fail
         if [ $CI_WILL_FAIL -eq 1 ]; then
+            echo "[DEBUG] CI will fail"
             # Handle PR comments
             PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
             if [[ "$PR_NUMBER" != "null" && "${{ inputs.allow_pr_comment }}" == "true" ]]; then
