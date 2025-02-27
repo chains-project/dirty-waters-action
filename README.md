@@ -30,7 +30,6 @@ SSC issues currently checked for:
 | Input                 | Description                                                                                        | Required | Default                    |
 | --------------------- | -------------------------------------------------------------------------------------------------- | -------- | -------------------------- |
 | github_token          |                                                                                                    | Yes      | -                          |
-| dirty_waters_version  | Dirty Waters version to use                                                                        | No       | latest                     |
 | project_repo          | Repository name (owner/repo)                                                                       | No       | {{ github.repository }}    |
 | version_old           | Base version/ref to analyze,                                                                       | No       | HEAD                       |
 | version_new           | New version/ref for diff analysis                                                                  | No       | HEAD^                      |

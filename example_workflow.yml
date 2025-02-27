@@ -41,7 +41,6 @@ jobs:
         with:
           # example args, change as needed
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          dirty_waters_version: v0.49.0
           package_manager: npm # Change this according to your project
           allow_pr_comment: true # Optional: comments on PRs if high severity issues are found
           comment_on_commit: true # Optional: comments on commits (if not PR/if above is false) if high severity issues are found

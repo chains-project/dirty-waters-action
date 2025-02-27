@@ -9,9 +9,6 @@ inputs:
   github_token:
     description: "GitHub token"
     required: true
-  dirty_waters_version:
-    description: 'Dirty Waters version to use, defaults to latest'
-    required: false
   project_repo:
     description: 'Project repository path (as in GitHub)'
     required: false
@@ -124,13 +121,9 @@ runs:
       run: |
         git clone https://github.com/chains-project/dirty-waters.git
         cd dirty-waters
-        if [ !"${{ inputs.dirty_waters_version }}" ]; then
-          checkout_version=$(git tag --sort=-creatordate | head -n1)
-        else
-          checkout_version=${{ inputs.dirty_waters_version }}
-        fi
-        echo "Checking out dirty-waters to version $checkout_version"
-        git checkout ${{ inputs.dirty_waters_version }}
+        # The version is pinned to the latest dirty-waters release at the time of the action release
+        DIRTY_WATERS_VERSION="v0.50.0"
+        git checkout $DIRTY_WATERS_VERSION
         pip install -r requirements.txt
 
     - name: Run analysis

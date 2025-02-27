@@ -25,10 +25,10 @@ jobs:
 
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_ENV
 
-      - name: Update dirty_waters_version in the example workflow to the repo's latest tag
+      - name: Update dirty_waters_version in the action to the repo's latest tag
         run: |
           LATEST_TAG=$(git ls-remote --tags https://github.com/chains-project/dirty-waters.git | awk -F/ '{print $3}' | sort -V | tail -n1)
-          sed -i "s/dirty_waters_version: v[0-9.]\+/dirty_waters_version: ${LATEST_TAG}/g" ./example_workflow.yml
+          sed -i "s/DIRTY_WATERS_VERSION=\".*\"/DIRTY_WATERS_VERSION=\"$LATEST_TAG\"/" action.yml
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5.1.0
