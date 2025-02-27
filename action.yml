@@ -42,10 +42,10 @@ inputs:
     description: 'Enable debug mode'
     required: false
     default: 'false'
-  no_gradual_report:
-    description: 'Disable gradual report functionality'
+  gradual_report:
+    description: 'Enable gradual report functionality'
     required: false
-    default: 'false'
+    default: 'true'
   fail_on_high_severity:
     description: 'Break CI if high severity issues are found'
     required: false
@@ -163,8 +163,8 @@ runs:
             CMD="$CMD --debug"
         fi
 
-        if [ "${{ inputs.no_gradual_report }}" == "true" ]; then
-            CMD="$CMD --no-gradual-report"
+        if [ "${{ inputs.gradual_report }}" == "false" ]; then
+            CMD="$CMD --gradual-report=false"
         fi
 
         echo "Running command: $CMD"

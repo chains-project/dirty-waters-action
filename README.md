@@ -39,7 +39,7 @@ SSC issues currently checked for:
 | pnpm_scope            | Extract dependencies from pnpm with a specific scope                                               | No       | -                          |
 | specified_smells      | Specify the smells to check for                                                                    | No       | all                        |
 | debug                 | Enable debug mode                                                                                  | No       | false                      |
-| no_gradual_report     | Disable gradual report functionality                                                               | No       | false                      |
+| gradual_report        | Enable gradual report functionality                                                                | No       | true                       |
 | fail_on_high_severity | Fail CI on high severity issues                                                                    | No       | true                       |
 | x_to_fail             | Percentage threshold to break CI on non-high severity issues (per type of issue)                   | No       | 5% of packages             |
 | allow_pr_comment      | Post analysis results as a PR comment if CI breaks                                                 | No       | true                       |
