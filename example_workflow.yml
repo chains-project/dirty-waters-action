@@ -43,5 +43,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           package_manager: npm # Change this according to your project
           allow_pr_comment: true # Optional: comments on PRs if high severity issues are found
-          comment_on_commit: true # Optional: comments on commits (if not PR/if above is false) if high severity issues are found
+          comment_on_commit: false # Optional: comments on commits (if not PR/if above is false) if high severity issues are found
+          gradual_report: false
           ignore_cache: ${{ github.event.inputs.ignore_cache }}
