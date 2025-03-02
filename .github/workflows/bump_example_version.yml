@@ -1,7 +1,10 @@
 name: Bump Action version
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Publish Release Tag"]
+    types:
+      - completed
     branches:
       - main
   workflow_dispatch:
