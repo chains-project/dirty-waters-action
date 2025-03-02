@@ -18,21 +18,35 @@ jobs:
       - name: Get latest tag
         id: get-latest-tag
         run: |
-          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0")
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
           echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
 
       - name: Generate new tag
         id: generate-new-tag
         run: |
           current_tag=${{ env.LATEST_TAG }}
-          IFS='.' read -r -a tag_parts <<< "$current_tag"
+
+          # Fix double 'v' prefix if it exists (e.g., convert vv1.11.1 to v1.11.1)
+          if [[ $current_tag == vv* ]]; then
+            current_tag="v${current_tag#vv}"
+            echo "Fixing double v prefix in tag: $current_tag"
+          fi
+
+          # Remove the 'v' prefix for version parsing
+          version=${current_tag#v}
+
+          IFS='.' read -r -a tag_parts <<< "$version"
           major=${tag_parts[0]}
           minor=${tag_parts[1]}
-          if [ ${#tag_parts[@]} -eq 2 ]; then
+
+          # Handle patch version correctly
+          if [ ${#tag_parts[@]} -lt 3 ]; then
             patch=0
           else
             patch=${tag_parts[2]}
           fi
+
+          # Create new tag with proper v prefix
           new_tag="v$major.$minor.$((patch + 1))"
           echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
 
