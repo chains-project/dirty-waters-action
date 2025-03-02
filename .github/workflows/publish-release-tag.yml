@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
         with:
           fetch-depth: 0 # Fetch all history for tags
 
@@ -25,8 +25,15 @@ jobs:
         id: generate-new-tag
         run: |
           current_tag=${{ env.LATEST_TAG }}
-          IFS='.' read -r major minor <<< "${current_tag#v}"
-          new_tag="v$major.$((minor + 1))"
+          IFS='.' read -r -a tag_parts <<< "$current_tag"
+          major=${tag_parts[0]}
+          minor=${tag_parts[1]}
+          if [ ${#tag_parts[@]} -eq 2 ]; then
+            patch=0
+          else
+            patch=${tag_parts[2]}
+          fi
+          new_tag="v$major.$minor.$((patch + 1))"
           echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
 
       - name: Create and push tag

@@ -9,13 +9,10 @@ inputs:
   github_token:
     description: "GitHub token"
     required: true
-  dirty_waters_version:
-    description: 'Dirty Waters version to use, defaults to latest'
-    required: false
-    default: 'HEAD'
   project_repo:
     description: 'Project repository path (as in GitHub)'
-    required: true
+    required: false
+    default: '${{ github.repository }}'
   version_old:
     description: 'Release version to analyze - old if differential analysis'
     required: false
@@ -45,10 +42,10 @@ inputs:
     description: 'Enable debug mode'
     required: false
     default: 'false'
-  no_gradual_report:
-    description: 'Disable gradual report functionality'
+  gradual_report:
+    description: 'Enable gradual report functionality'
     required: false
-    default: 'false'
+    default: 'true'
   fail_on_high_severity:
     description: 'Break CI if high severity issues are found'
     required: false
@@ -67,10 +64,12 @@ inputs:
     default: 'false'
   latest_commit_sha:
     description: 'Latest commit SHA from the project using this action, using for commenting on commits'
-    required: true
+    required: false
+    default: '${{ github.sha }}'
   github_event_before:
     description: 'GitHub event before SHA, to retrieve the previous cache key'
-    required: true
+    required: false
+    default: '${{ github.event.before }}'
   ignore_cache:
     description: 'Ignore the repository cache for this run'
     required: false
@@ -80,7 +79,7 @@ runs:
   using: 'composite'
   steps:
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v5.4.0
       with:
         python-version: '3.12'
 
@@ -105,7 +104,7 @@ runs:
         fi
 
     - name: Restore cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v4.2.1
       id: restore-cache
       if: inputs.ignore_cache != 'true'
       with:
@@ -122,9 +121,9 @@ runs:
       run: |
         git clone https://github.com/chains-project/dirty-waters.git
         cd dirty-waters
-        if [ "${{ inputs.dirty_waters_version }}" != "HEAD" ]; then
-          git checkout ${{ inputs.dirty_waters_version }}
-        fi
+        # The version is pinned to the latest dirty-waters release at the time of the action release
+        DIRTY_WATERS_VERSION="98952a5a8f08a740e477e6bc1e5b468765af2829"
+        git checkout $DIRTY_WATERS_VERSION
         pip install -r requirements.txt
 
     - name: Run analysis
@@ -164,8 +163,8 @@ runs:
             CMD="$CMD --debug"
         fi
 
-        if [ "${{ inputs.no_gradual_report }}" == "true" ]; then
-            CMD="$CMD --no-gradual-report"
+        if [ "${{ inputs.gradual_report }}" == "false" ]; then
+            CMD="$CMD --gradual-report=false"
         fi
 
         echo "Running command: $CMD"
@@ -194,7 +193,8 @@ runs:
 
         # Check for high severity issues
         if [ "${{ inputs.fail_on_high_severity }}" == "true" ]; then
-            if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️) [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
+            echo "[DEBUG] Fails on high severity, checking for any high severity issues"
+            if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
                 echo "High severity issues found. CI will fail."
                 CI_WILL_FAIL=1
             fi
@@ -202,9 +202,11 @@ runs:
 
         # Only check for threshold violations if we haven't already decided to fail
         if [ $CI_WILL_FAIL -eq 0 ]; then
+            echo "[DEBUG] Haven't decided to fail yet, checking for threshold being surpassed"
             total_packages=$(cat "$latest_report" | grep -o "Total packages in the supply chain: [0-9]*" | grep -o "[0-9]*")
             for severity in "⚠️⚠️⚠️" "⚠️⚠️" "⚠️"; do
-                for count in $(cat "$latest_report" | grep -o "($severity) [0-9]*" | grep -o "[0-9]*"); do
+                for count in $(cat "$latest_report" | grep -o "($severity): [0-9]*" | grep -o "[0-9]*"); do
+                    echo "[DEBUG] Count for $severity is $count"
                     if [[ $(echo "scale=2; $count / $total_packages * 100" | bc) -gt ${{ inputs.x_to_fail }} ]]; then
                         echo "Number of $severity issues surpasses the threshold. CI will fail."
                         CI_WILL_FAIL=1
@@ -216,13 +218,31 @@ runs:
 
         # Handle comments only if CI will fail
         if [ $CI_WILL_FAIL -eq 1 ]; then
+            echo "[DEBUG] CI will fail"
             # Handle PR comments
             PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
             if [[ "$PR_NUMBER" != "null" && "${{ inputs.allow_pr_comment }}" == "true" ]]; then
-                curl -s -X POST \
+                # Check if a comment from this action exists
+                COMMENT_ID=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments" | jq -r ".[] | select(.user.login == \"github-actions[bot]\") | select(.body | contains(\"Software Supply Chain Report of ${{ inputs.project_repo }}\")) | .id")
+
+                # Set the appropriate URL and HTTP method based on whether a comment exists
+                if [[ -z "$COMMENT_ID" ]]; then
+                    # No existing comment - create new one
+                    COMMENT_URL="https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments"
+                    HTTP_METHOD="POST"
+                else
+                    # Comment exists - edit it
+                    COMMENT_URL="https://api.github.com/repos/${{ inputs.project_repo }}/issues/comments/${COMMENT_ID}"
+                    HTTP_METHOD="PATCH"  # Use PATCH to update an existing comment
+                fi
+
+                echo "[DEBUG] ${HTTP_METHOD} comment to $COMMENT_URL"
+
+                # Single curl command using the determined URL and method
+                curl -s -X $HTTP_METHOD \
                     -H "Accept: application/vnd.github.v3+json" \
                     -H "Authorization: token $GITHUB_TOKEN" \
-                    "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments" \
+                    "$COMMENT_URL" \
                     -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
             fi
 
@@ -245,12 +265,13 @@ runs:
         fi
 
     - name: Save cache
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v4.2.1
       if: always()
       with:
         path: tool/cache
         key: dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ steps.set-sha.outputs.commit_sha }}
 
     - name: Break CI if analyses fail
-      run: exit $(( steps.analysis.outcome == 'failure' ))
+      run: |
+        [[ "${{ steps.analysis.outcome }}" == "failure" ]] && exit 1 || exit 0
       shell: bash

@@ -2,7 +2,7 @@
 
 This action runs [Dirty Waters](https://github.com/chains-project/dirty-waters) on your repository to analyze dependencies for Software Supply Chain (SSC) issues.
 Add this workflow to your repository to analyze dependencies in your pull requests
-(change/add inputs as needed -- details in [action.yml](./action.yml)). An example of a workflow that uses this action is available in [.github/workflows/dirty-waters.yml](./.github/workflows/dirty-waters.yml).
+(change/add inputs as needed -- details in [action.yml](./action.yml)). An example of a workflow that uses this action is available in [example_workflow.yml](./example_workflow.yml).
 
 The action will:
 
@@ -27,24 +27,23 @@ SSC issues currently checked for:
 
 ### Inputs
 
-| Input                 | Description                                                                                        | Required | Default        |
-| --------------------- | -------------------------------------------------------------------------------------------------- | -------- | -------------- |
-| github_token          |                                                                                                    | Yes      | -              |
-| dirty_waters_version  | Dirty Waters version to use                                                                        | No       | latest         |
-| project_repo          | Repository name (owner/repo)                                                                       | Yes      | -              |
-| version_old           | Base version/ref to analyze,                                                                       | No       | HEAD           |
-| version_new           | New version/ref for diff analysis                                                                  | No       | HEAD^          |
-| differential_analysis | Whether to perform differential analysis (true/false)                                              | No       | false          |
-| package_manager       | Package manager (npm, yarn-classic, yarn-berry, pnpm, maven)                                       | Yes      | -              |
-| name_match            | Compare the package names with the name in the in the package.json file. Will slow down execution. | No       | false          |
-| pnpm_scope            | Extract dependencies from pnpm with a specific scope                                               | No       | -              |
-| specified_smells      | Specify the smells to check for                                                                    | No       | all            |
-| debug                 | Enable debug mode                                                                                  | No       | false          |
-| no_gradual_report     | Disable gradual report functionality                                                               | No       | false          |
-| fail_on_high_severity | Fail CI on high severity issues                                                                    | No       | true           |
-| x_to_fail             | Percentage threshold to break CI on non-high severity issues (per type of issue)                   | No       | 5% of packages |
-| allow_pr_comment      | Post analysis results as a PR comment if CI breaks                                                 | No       | true           |
-| comment_on_commit     | Post analysis results as a commit comment if CI breaks                                             | No       | false          |
-| latest_commit_sha     | Latest commit SHA, used to comment on commits                                                      | Yes      | -              |
-| github_event_before   | GitHub event before SHA, to retrieve the previous cache key                                        | Yes      | -              |
-| ignore_cache          | Ignore the repository cache for this run (true/false)                                              | No       | false          |
+| Input                 | Description                                                                                        | Required | Default                    |
+| --------------------- | -------------------------------------------------------------------------------------------------- | -------- | -------------------------- |
+| github_token          |                                                                                                    | Yes      | -                          |
+| project_repo          | Repository name (owner/repo)                                                                       | No       | {{ github.repository }}    |
+| version_old           | Base version/ref to analyze,                                                                       | No       | HEAD                       |
+| version_new           | New version/ref for diff analysis                                                                  | No       | HEAD^                      |
+| differential_analysis | Whether to perform differential analysis (true/false)                                              | No       | false                      |
+| package_manager       | Package manager (npm, yarn-classic, yarn-berry, pnpm, maven)                                       | Yes      | -                          |
+| name_match            | Compare the package names with the name in the in the package.json file. Will slow down execution. | No       | false                      |
+| pnpm_scope            | Extract dependencies from pnpm with a specific scope                                               | No       | -                          |
+| specified_smells      | Specify the smells to check for                                                                    | No       | all                        |
+| debug                 | Enable debug mode                                                                                  | No       | false                      |
+| gradual_report        | Enable gradual report functionality                                                                | No       | true                       |
+| fail_on_high_severity | Fail CI on high severity issues                                                                    | No       | true                       |
+| x_to_fail             | Percentage threshold to break CI on non-high severity issues (per type of issue)                   | No       | 5% of packages             |
+| allow_pr_comment      | Post analysis results as a PR comment if CI breaks                                                 | No       | true                       |
+| comment_on_commit     | Post analysis results as a commit comment if CI breaks                                             | No       | false                      |
+| latest_commit_sha     | Latest commit SHA, used to comment on commits                                                      | No       | ${{ github.sha }}          |
+| github_event_before   | GitHub event before SHA, to retrieve the previous cache key                                        | No       | ${{ github.event.before }} |
+| ignore_cache          | Ignore the repository cache for this run (true/false)                                              | No       | false                      |

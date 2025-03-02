@@ -1,0 +1,48 @@
+name: Dirty Waters Analysis
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      # Include the one(s) relevant for your use case
+      - "**/package.json"
+      - "**/package-lock.json"
+      - "**/yarn.lock"
+      - "**/pnpm-lock.yaml"
+      - "**/pom.xml"
+  workflow_dispatch:
+    inputs:
+      ignore_cache:
+        description: "Ignore the repository cache for this run"
+        required: false
+        default: "false"
+
+permissions: read-all
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run Static Dirty Waters analysis
+        id: static-analysis
+        if: steps.check-first-run.outputs.is_first_run == 'true'
+        uses: chains-project/dirty-waters-action@v1.10
+        with:
+          # example args, change as needed
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          package_manager: npm # Change this according to your project
+          allow_pr_comment: true # Optional: comments on PRs if high severity issues are found
+          comment_on_commit: false # Optional: comments on commits (if not PR/if above is false) if high severity issues are found
+          gradual_report: false
+          ignore_cache: ${{ github.event.inputs.ignore_cache }}
