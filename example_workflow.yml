@@ -36,8 +36,7 @@ jobs:
 
       - name: Run Static Dirty Waters analysis
         id: static-analysis
-        if: steps.check-first-run.outputs.is_first_run == 'true'
-        uses: chains-project/dirty-waters-action@v1.11.5.11.4.11.3.11.2
+        uses: chains-project/dirty-waters-action@v1.11.5
         with:
           # example args, change as needed
           github_token: ${{ secrets.GITHUB_TOKEN }}
