@@ -28,7 +28,7 @@ jobs:
       - name: Update dirty-waters-action version to latest tag
         run: |
           # Use sed to update occurrences of the version in the workflow file with latest tag
-          sed -i "s/chains-project\/dirty-waters-action@[a-z0-9]\+/chains-project\/dirty-waters-action@${{ env.LATEST_TAG }}/g" ./example_workflow.yml
+          sed -i 's/chains-project\/dirty-waters-action@v[0-9.]\+/chains-project\/dirty-waters-action@'"$LATEST_TAG"'/g' ./example_workflow.yml
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5.1.0
