@@ -29,6 +29,7 @@ jobs:
       - name: Update tracking issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_PATH: ${{ github.workflow }}
           ISSUE_TITLE: "Check Dirty-Waters Updates"
           SOURCE_REPO: "chains-project/dirty-waters"
           ACTION_REPO: "chains-project/dirty-waters-action"
