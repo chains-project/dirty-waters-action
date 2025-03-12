@@ -31,12 +31,13 @@ jobs:
         id: get-latest-tag
         run: |
           latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
-          echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
+          echo "Latest tag: $latest_tag"
+          echo "LATEST_ACTION_TAG=$latest_tag" >> $GITHUB_ENV
 
       - name: Generate new tag
         id: generate-new-tag
         run: |
-          current_tag=${{ env.LATEST_TAG }}
+          current_tag=${{ env.LATEST_ACTION_TAG }}
 
           # Fix double 'v' prefix if it exists (e.g., convert vv1.11.1 to v1.11.1)
           if [[ $current_tag == vv* ]]; then
