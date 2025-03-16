@@ -42,6 +42,9 @@ inputs:
     description: 'Enable debug mode'
     required: false
     default: 'false'
+  config:
+    description: 'Path to the configuration file'
+    required: false
   gradual_report:
     description: 'Enable gradual report functionality'
     required: false
@@ -161,6 +164,10 @@ runs:
 
         if [ "${{ inputs.debug }}" == "true" ]; then
             CMD="$CMD --debug"
+        fi
+
+        if [ -n "${{ inputs.config }}" ]; then
+            CMD="$CMD --config ${{ inputs.config }}"
         fi
 
         if [ "${{ inputs.gradual_report }}" == "false" ]; then

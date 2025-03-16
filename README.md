@@ -19,11 +19,12 @@ However, after the first run, subsequent ones should be fast.
 SSC issues currently checked for:
 
 - No source code links (or invalid ones) for a dependency
-- Provided release tag not found in a dependency's repository
+- Provided release tag/commit SHA not found in a dependency's repository
 - Dependency being a fork of another package
 - Deprecated dependency
 - Dependency without build attestation
 - Dependency without code signature (or an invalid one)
+- Aliased dependencies
 
 ### Inputs
 
@@ -39,6 +40,7 @@ SSC issues currently checked for:
 | pnpm_scope            | Extract dependencies from pnpm with a specific scope                                               | No       | -                          |
 | specified_smells      | Specify the smells to check for                                                                    | No       | all                        |
 | debug                 | Enable debug mode                                                                                  | No       | false                      |
+| config                | Path to the configuration file                                                                     | No       | -                          |
 | gradual_report        | Enable gradual report functionality                                                                | No       | true                       |
 | fail_on_high_severity | Fail CI on high severity issues                                                                    | No       | true                       |
 | x_to_fail             | Percentage threshold to break CI on non-high severity issues (per type of issue)                   | No       | 5% of packages             |
