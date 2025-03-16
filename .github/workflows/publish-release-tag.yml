@@ -30,7 +30,7 @@ jobs:
       - name: Get latest tag
         id: get-latest-tag
         run: |
-          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          latest_tag=$(git ls-remote --tags https://github.com/chains-project/dirty-waters-action.git | awk -F/ '{print $3}' | sort -V | tail -n1)
           echo "Latest tag: $latest_tag"
           echo "LATEST_ACTION_TAG=$latest_tag" >> $GITHUB_ENV
 
