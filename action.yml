@@ -54,7 +54,7 @@ inputs:
     required: false
     default: 'true'
   x_to_fail:
-    description: 'Percentage threshold for the number of non-high severity issues to fail the CI'
+    description: 'Percentage threshold for the number of high or medium severity issues to fail the CI'
     required: false
     default: '5'
   allow_pr_comment:
@@ -211,7 +211,7 @@ runs:
         if [ $CI_WILL_FAIL -eq 0 ]; then
             echo "[DEBUG] Haven't decided to fail yet, checking for threshold being surpassed"
             total_packages=$(cat "$latest_report" | grep -o "Total packages in the supply chain: [0-9]*" | grep -o "[0-9]*")
-            for severity in "⚠️⚠️⚠️" "⚠️⚠️" "⚠️"; do
+            for severity in "⚠️⚠️⚠️" "⚠️⚠️"; do
                 for count in $(cat "$latest_report" | grep -o "($severity): [0-9]*" | grep -o "[0-9]*"); do
                     echo "[DEBUG] Count for $severity is $count"
                     if [[ $(echo "scale=2; $count / $total_packages * 100" | bc) -gt ${{ inputs.x_to_fail }} ]]; then

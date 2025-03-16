@@ -43,7 +43,7 @@ SSC issues currently checked for:
 | config                | Path to the configuration file                                                                     | No       | -                          |
 | gradual_report        | Enable gradual report functionality                                                                | No       | true                       |
 | fail_on_high_severity | Fail CI on high severity issues                                                                    | No       | true                       |
-| x_to_fail             | Percentage threshold to break CI on non-high severity issues (per type of issue)                   | No       | 5% of packages             |
+| x_to_fail             | Percentage threshold to break CI on high or medium severity issues (per type of issue)             | No       | 5% of packages             |
 | allow_pr_comment      | Post analysis results as a PR comment if CI breaks                                                 | No       | true                       |
 | comment_on_commit     | Post analysis results as a commit comment if CI breaks                                             | No       | false                      |
 | latest_commit_sha     | Latest commit SHA, used to comment on commits                                                      | No       | ${{ github.sha }}          |
