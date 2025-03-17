@@ -68,7 +68,7 @@ inputs:
   latest_commit_sha:
     description: 'Latest commit SHA from the project using this action, using for commenting on commits'
     required: false
-    default: '${{ github.sha }}'
+    default: '${{ github.ref }}'
   github_event_before:
     description: 'GitHub event before SHA, to retrieve the previous cache key'
     required: false
