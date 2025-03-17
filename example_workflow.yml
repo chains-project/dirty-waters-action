@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write # Required if you want comments in PRs
+      contents: write # Required if you want comments in commits
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
