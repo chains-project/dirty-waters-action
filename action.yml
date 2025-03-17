@@ -270,9 +270,9 @@ runs:
                 COMMENT_ID=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments" | jq -r ".[] | select(.user.login == \"github-actions[bot]\") | select(.body | contains(\"Software Supply Chain Report of ${{ inputs.project_repo }}\")) | .id")
                 if [[ -n "$COMMENT_ID" ]]; then
                     BODY="Currently, this project does not break CI via \`dirty-waters-action\`, as it either didn't identify any smells, or did but not in an amount enough to break CI. You can still see the current report status below."
-                    BODY+="\n\n<details>\n<summary>Software Supply Chain Report of ${{ inputs.project_repo }}</summary>\n\n"
+                    BODY+="<details><summary>Software Supply Chain Report of ${{ inputs.project_repo }}</summary>"
                     BODY+="$COMMENT"
-                    BODY+="\n</details>"
+                    BODY+="</details>"
                     curl -s -X PATCH \
                         -H "Accept: application/vnd.github.v3+json" \
                         -H "Authorization: token $GITHUB_TOKEN" \
