@@ -207,6 +207,11 @@ runs:
             fi
         fi
 
+        # function from https://unix.stackexchange.com/questions/137110/comparison-of-decimal-numbers-in-bash
+        compare() (IFS=" "
+          exec awk "BEGIN{if (!($*)) exit(1)}"
+        )
+
         # Only check for threshold violations if we haven't already decided to fail
         if [ $CI_WILL_FAIL -eq 0 ]; then
             echo "[DEBUG] Haven't decided to fail yet, checking for threshold being surpassed"
@@ -214,7 +219,7 @@ runs:
             for severity in "⚠️⚠️⚠️" "⚠️⚠️"; do
                 for count in $(cat "$latest_report" | grep -o "($severity): [0-9]*" | grep -o "[0-9]*"); do
                     echo "[DEBUG] Count for $severity is $count"
-                    if [[ $(echo "scale=2; $count / $total_packages * 100" | bc) -gt ${{ inputs.x_to_fail }} ]]; then
+                    if compare "$(echo "scale=2; $count / $total_packages * 100" | bc) > ${{ inputs.x_to_fail }}"; then
                         echo "Number of $severity issues surpasses the threshold. CI will fail."
                         CI_WILL_FAIL=1
                         break 2  # Break both loops once we know we'll fail
