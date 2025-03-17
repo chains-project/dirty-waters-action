@@ -262,6 +262,22 @@ runs:
                     "https://api.github.com/repos/${{ inputs.project_repo }}/commits/${{ steps.set_sha.outputs.commit_sha }}/comments" \
                     -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
             fi
+        else
+            echo "[DEBUG] CI will not fail"
+            echo "[DEBUG] Checking if a comment from this action exists in the PR; if so, we're updating it, saying that the CI passed"
+            PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
+            if [[ "$PR_NUMBER" != "null" && "${{ inputs.allow_pr_comment }}" == "true" ]]; then
+                COMMENT_ID=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments" | jq -r ".[] | select(.user.login == \"github-actions[bot]\") | select(.body | contains(\"Software Supply Chain Report of ${{ inputs.project_repo }}\")) | .id")
+                if [[ -n "$COMMENT_ID" ]]; then
+                    COMMENT="Currently, this project does not break CI via \`dirty-waters-action\`, as it either didn't identify any smells, or did but not in an amount enough to break CI. You can still see the current report status below."
+                    COMMENT+="\n\n<details>\n<summary>Report</summary>\n\n$COMMENT\n\n</details>"
+                    curl -s -X PATCH \
+                        -H "Accept: application/vnd.github.v3+json" \
+                        -H "Authorization: token $GITHUB_TOKEN" \
+                        "https://api.github.com/repos/${{ inputs.project_repo }}/issues/comments/${COMMENT_ID}" \
+                        -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
+                fi
+            fi
         fi
 
         # Copy results
