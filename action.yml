@@ -121,7 +121,7 @@ runs:
         git clone https://github.com/chains-project/dirty-waters.git
         cd dirty-waters
         # The version is pinned to the latest dirty-waters release at the time of the action release
-        DIRTY_WATERS_VERSION="v0.73.0"
+        DIRTY_WATERS_VERSION="v0.72.0"
         git checkout $DIRTY_WATERS_VERSION
         pip install -r requirements.txt
 
@@ -269,12 +269,13 @@ runs:
             if [[ "$PR_NUMBER" != "null" && "${{ inputs.allow_pr_comment }}" == "true" ]]; then
                 COMMENT_ID=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ inputs.project_repo }}/issues/$PR_NUMBER/comments" | jq -r ".[] | select(.user.login == \"github-actions[bot]\") | select(.body | contains(\"Software Supply Chain Report of ${{ inputs.project_repo }}\")) | .id")
                 if [[ -n "$COMMENT_ID" ]]; then
-                    COMMENT="Currently, this project does not break CI via \`dirty-waters-action\`, as it either didn't identify any smells, or did but not in an amount enough to break CI. You can still see the current report status below.\n\n<details>\n<summary>Report</summary>\n\n$COMMENT\n\n</details>"
+                    BODY="Currently, this project does not break CI via \`dirty-waters-action\`, as it either didn't identify any smells, or did but not in an amount enough to break CI. You can still see the current report status below."
+                    BODY+="\n\n<details>\n<summary>Report</summary>\n\n$COMMENT\n\n</details>"
                     curl -s -X PATCH \
                         -H "Accept: application/vnd.github.v3+json" \
                         -H "Authorization: token $GITHUB_TOKEN" \
                         "https://api.github.com/repos/${{ inputs.project_repo }}/issues/comments/${COMMENT_ID}" \
-                        -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
+                        -d "$(jq -n --arg body "$BODY" '{body: $body}')"
                 fi
             fi
         fi
