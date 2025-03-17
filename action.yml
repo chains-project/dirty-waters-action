@@ -219,7 +219,7 @@ runs:
             for severity in "⚠️⚠️⚠️" "⚠️⚠️"; do
                 for count in $(cat "$latest_report" | grep -o "($severity): [0-9]*" | grep -o "[0-9]*"); do
                     echo "[DEBUG] Count for $severity is $count"
-                    if compare "$(echo "scale=2; $count / $total_packages * 100" | bc) > 5"; then
+                    if compare "$(echo "scale=2; $count / $total_packages * 100" | bc) > ${{ inputs.x_to_fail }}"; then
                         echo "Number of $severity issues surpasses the threshold. CI will fail."
                         CI_WILL_FAIL=1
                         break 2  # Break both loops once we know we'll fail
