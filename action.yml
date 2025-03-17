@@ -93,7 +93,7 @@ runs:
 
     - name: Set commit SHA
       # Required because of isolation issues in PRs
-      id: set-sha
+      id: set_sha
       shell: bash
       run: |
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
@@ -259,7 +259,7 @@ runs:
                 curl -s -X POST \
                     -H "Accept: application/vnd.github.v3+json" \
                     -H "Authorization: token $GITHUB_TOKEN" \
-                    "https://api.github.com/repos/${{ inputs.project_repo }}/commits/${{ steps.set-sha.outputs.commit_sha }}/comments" \
+                    "https://api.github.com/repos/${{ inputs.project_repo }}/commits/${{ steps.set_sha.outputs.commit_sha }}/comments" \
             fi
         fi
 
@@ -276,7 +276,7 @@ runs:
       if: always()
       with:
         path: tool/cache
-        key: dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ steps.set-sha.outputs.commit_sha }}
+        key: dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ steps.set_sha.outputs.commit_sha }}
 
     - name: Break CI if analyses fail
       run: |
