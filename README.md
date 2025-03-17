@@ -46,6 +46,5 @@ SSC issues currently checked for:
 | x_to_fail             | Percentage threshold to break CI on high or medium severity issues (per type of issue)             | No       | 5% of packages             |
 | allow_pr_comment      | Post analysis results as a PR comment if CI breaks                                                 | No       | true                       |
 | comment_on_commit     | Post analysis results as a commit comment if CI breaks                                             | No       | false                      |
-| latest_commit_sha     | Latest commit SHA, used to comment on commits                                                      | No       | ${{ github.sha }}          |
 | github_event_before   | GitHub event before SHA, to retrieve the previous cache key                                        | No       | ${{ github.event.before }} |
 | ignore_cache          | Ignore the repository cache for this run (true/false)                                              | No       | false                      |

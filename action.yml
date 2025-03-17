@@ -65,10 +65,6 @@ inputs:
     description: 'Post analysis results as a commit comment if CI breaks'
     required: false
     default: 'false'
-  latest_commit_sha:
-    description: 'Latest commit SHA from the project using this action, using for commenting on commits'
-    required: false
-    default: '${{ github.ref }}'
   github_event_before:
     description: 'GitHub event before SHA, to retrieve the previous cache key'
     required: false
@@ -263,8 +259,7 @@ runs:
                 curl -s -X POST \
                     -H "Accept: application/vnd.github.v3+json" \
                     -H "Authorization: token $GITHUB_TOKEN" \
-                    "https://api.github.com/repos/${{ inputs.project_repo }}/commits/${{ inputs.latest_commit_sha }}/comments" \
-                    -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
+                    "https://api.github.com/repos/${{ inputs.project_repo }}/commits/${{ steps.set-sha.outputs.commit_sha }}/comments" \
             fi
         fi
 
