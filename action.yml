@@ -32,9 +32,9 @@ inputs:
     description: 'Compare the package names with the name in the in the package.json file. This option will slow down the execution time due to the API rate limit of code search'
     required: false
     default: 'false'
-  pnpm_scope:
-    description: 'Extract dependencies from pnpm with a specific scope'
-    required: false
+    #pnpm_scope:
+    #description: 'Extract dependencies from pnpm with a specific scope'
+    #required: false
   specified_smells:
     description: 'List of specified smells to analyze. Provide it as a space-separated list of smells (e.g., "--check-source-code --check-forks")'
     required: false
@@ -121,7 +121,7 @@ runs:
         git clone https://github.com/chains-project/dirty-waters.git
         cd dirty-waters
         # The version is pinned to the latest dirty-waters release at the time of the action release
-        DIRTY_WATERS_VERSION="v0.81.0"
+        DIRTY_WATERS_VERSION="v0.82.0"
         git checkout $DIRTY_WATERS_VERSION
         pip install -r requirements.txt
 
@@ -150,9 +150,9 @@ runs:
             CMD="$CMD -n"
         fi
 
-        if [ -n "${{ inputs.pnpm_scope }}" ]; then
-            CMD="$CMD --pnpm-scope ${{ inputs.pnpm_scope }}"
-        fi
+        #if [ -n "${{ inputs.pnpm_scope }}" ]; then
+        #    CMD="$CMD --pnpm-scope ${{ inputs.pnpm_scope }}"
+        #fi
 
         if [ -n "${{ inputs.specified_smells }}" ]; then
             CMD="$CMD ${{ inputs.specified_smells }}"
