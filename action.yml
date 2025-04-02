@@ -43,7 +43,7 @@ inputs:
     required: false
     default: 'false'
   config:
-    description: 'Path to the configuration file'
+    description: 'Path to the configuration file, relative to the root of the project'
     required: false
   gradual_report:
     description: 'Enable gradual report functionality'
@@ -121,7 +121,7 @@ runs:
         git clone https://github.com/chains-project/dirty-waters.git
         cd dirty-waters
         # The version is pinned to the latest dirty-waters release at the time of the action release
-        DIRTY_WATERS_VERSION="v0.88.0"
+        DIRTY_WATERS_VERSION="v0.90.0"
         git checkout $DIRTY_WATERS_VERSION
         pip install -r requirements.txt
 
@@ -163,6 +163,7 @@ runs:
         fi
 
         if [ -n "${{ inputs.config }}" ]; then
+            cp $GITHUB_WORKSPACE/${{ inputs.config }} .
             CMD="$CMD --config ${{ inputs.config }}"
         fi
 
