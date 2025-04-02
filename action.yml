@@ -43,7 +43,7 @@ inputs:
     required: false
     default: 'false'
   config:
-    description: 'Path to the configuration file'
+    description: 'Path to the configuration file, relative to the root of the project'
     required: false
   gradual_report:
     description: 'Enable gradual report functionality'
