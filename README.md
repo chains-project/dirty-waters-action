@@ -39,7 +39,7 @@ SSC issues currently checked for:
 | name_match            | Compare the package names with the name in the in the package.json file. Will slow down execution. | No       | false                      |
 | specified_smells      | Specify the smells to check for                                                                    | No       | all                        |
 | debug                 | Enable debug mode                                                                                  | No       | false                      |
-| config                | Path to the configuration file                                                                     | No       | -                          |
+| config                | Path to the configuration file, relative to your project's root                                    | No       | -                          |
 | gradual_report        | Enable gradual report functionality                                                                | No       | true                       |
 | fail_on_high_severity | Fail CI on high severity issues                                                                    | No       | true                       |
 | x_to_fail             | Percentage threshold to break CI on high or medium severity issues (per type of issue)             | No       | 5% of packages             |
