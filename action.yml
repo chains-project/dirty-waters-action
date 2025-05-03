@@ -163,8 +163,8 @@ runs:
         fi
 
         if [ -n "${{ inputs.config }}" ]; then
-            cp $GITHUB_WORKSPACE/${{ inputs.config }} .
-            CMD="$CMD --config ${{ inputs.config }}"
+            #cp $GITHUB_WORKSPACE/${{ inputs.config }} .
+            CMD="$CMD --config $GITHUB_WORKSPACE/${{ inputs.config }}"
         fi
 
         if [ "${{ inputs.gradual_report }}" == "false" ]; then
