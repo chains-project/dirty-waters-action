@@ -49,10 +49,9 @@ inputs:
     description: 'Enable gradual report functionality'
     required: false
     default: 'true'
-  fail_on_high_severity:
-    description: 'Break CI if high severity issues are found'
+  fail_on_min_severity:
+    description: 'Break CI if any issues with this severity (or higher) are found'
     required: false
-    default: 'true'
   x_to_fail:
     description: 'Percentage threshold for the number of high or medium severity issues to fail the CI'
     required: false
@@ -121,7 +120,7 @@ runs:
         git clone https://github.com/chains-project/dirty-waters.git
         cd dirty-waters
         # The version is pinned to the latest dirty-waters release at the time of the action release
-        DIRTY_WATERS_VERSION="v0.97.0"
+        DIRTY_WATERS_VERSION="1dfb5543274c39d2309cbf152676e9f218c5a852" # change to main version before merge
         git checkout $DIRTY_WATERS_VERSION
         pip install -r requirements.txt
 
@@ -195,13 +194,29 @@ runs:
         # Check for CI failure conditions
         CI_WILL_FAIL=0
 
-        # Check for high severity issues
-        if [ "${{ inputs.fail_on_high_severity }}" == "true" ]; then
-            echo "[DEBUG] Fails on high severity, checking for any high severity issues"
-            if [[ $(cat "$latest_report" | grep -o "(⚠️⚠️⚠️): [0-9]*" | grep -o "[0-9]*" | sort -nr | head -n1) -gt 0 ]]; then
-                echo "High severity issues found. CI will fail."
-                CI_WILL_FAIL=1
+        # Check if min-severity issues are in the report
+        if [ -n "${{ inputs.fail_on_min_severity }}" ]; then
+            declare -A severity_map=( ["low"]=1 ["medium"]=2 ["high"]=3 ["critical"]=4 )
+            min_severity="${{ inputs.fail_on_min_severity }}"
+            min_level=${severity_map[$min_severity]}
+
+            if [ -z "$min_level" ]; then
+                echo "[ERROR] Invalid value for fail_on_min_severity: $min_severity"
+                exit 1
             fi
+
+            echo "[DEBUG] Fail on severity level '$min_severity' and above (level $min_level)"
+
+            for severity_level in $(seq "$min_level" 4); do
+                warning_icons=$(printf '⚠️%.0s' $(seq 1 "$severity_level"))
+                count=$(grep -c "(${warning_icons})" "$latest_report")
+                echo "[DEBUG] Found $count issue(s) with severity level $severity_level"
+                if [ "$count" -gt 0 ]; then
+                    echo "Severity level $severity_level or higher issue(s) found. CI will fail."
+                    CI_WILL_FAIL=1
+                    break
+                fi
+            done
         fi
 
         # function from https://unix.stackexchange.com/questions/137110/comparison-of-decimal-numbers-in-bash
