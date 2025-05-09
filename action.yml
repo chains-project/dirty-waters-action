@@ -52,6 +52,7 @@ inputs:
   fail_on_min_severity:
     description: 'Break CI if any issues with this severity (or higher) are found'
     required: false
+    default: 'critical'
   x_to_fail:
     description: 'Percentage threshold for the number of high or medium severity issues to fail the CI'
     required: false
