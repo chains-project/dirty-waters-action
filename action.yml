@@ -210,13 +210,13 @@ runs:
 
             for severity_level in $(seq "$min_level" 4); do
                 warning_icons=$(printf '⚠️%.0s' $(seq 1 "$severity_level"))
-                count=$(grep -c "(${warning_icons})" "$latest_report")
-                echo "[DEBUG] Found $count issue(s) with severity level $severity_level"
-                if [ "$count" -gt 0 ]; then
-                    echo "Severity level $severity_level or higher issue(s) found. CI will fail."
-                    CI_WILL_FAIL=1
-                    break
-                fi
+                for count in $(cat "$latest_report" | grep -o "(${warning_icons}): [0-9]*" | grep -o "[0-9]*"); do
+                    if [ "$count" -gt 0 ]; then
+                        echo "Severity level $severity_level or higher issue(s) found. CI will fail."
+                        CI_WILL_FAIL=1
+                        break
+                    fi
+                done
             done
         fi
 
