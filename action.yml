@@ -121,7 +121,7 @@ runs:
         git clone https://github.com/chains-project/dirty-waters.git
         cd dirty-waters
         # The version is pinned to the latest dirty-waters release at the time of the action release
-        DIRTY_WATERS_VERSION="1dfb5543274c39d2309cbf152676e9f218c5a852" # change to main version before merge
+        DIRTY_WATERS_VERSION="6065c48e8d770adc9679a229ce31cfbe4f2aa99b" # change to main version before merge
         git checkout $DIRTY_WATERS_VERSION
         pip install -r requirements.txt
 
