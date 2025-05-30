@@ -159,7 +159,7 @@ runs:
 
           echo "Comparing $version_old -> $version_new"
         else
-          # Non-differential mode: just analyze version_old = current SHA
+          # Non-differential mode: just analyze version_old = current SHA OR given one
           if [ -z "$version_old" ]; then
             version_old=${{ steps.set_sha.outputs.commit_sha }}
           fi
