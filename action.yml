@@ -16,11 +16,9 @@ inputs:
   version_old:
     description: 'Release version to analyze - old if differential analysis'
     required: false
-    default: 'HEAD'
   version_new:
     description: 'New release version for differential analysis'
     required: false
-    default: 'HEAD^'
   differential_analysis:
     description: 'Whether to perform differential analysis'
     required: false
@@ -139,11 +137,41 @@ runs:
           cp -r $GITHUB_WORKSPACE/tool/cache/ .
         fi
 
+        # Correct versions
+        differential="${{ inputs.differential_analysis }}"
+        version_old="${{ inputs.version_old }}"
+        version_new="${{ inputs.version_new }}"
+
+        # Always set version_new to the commit that triggered the workflow if not provided
+        if [ -z "$version_new" ]; then
+          version_new=${{ steps.set_sha.outputs.commit_sha }}
+        fi
+
+        if [ "$differential" = "true" ]; then
+          echo "Running in differential analysis mode"
+
+          if [ -z "$version_old" ]; then
+            version_old=$(git rev-parse "$version_new^")
+            echo "version_old not provided, using version_new^: $version_old"
+          else
+            echo "Using version_old from input: $version_old"
+          fi
+
+          echo "Comparing $version_old -> $version_new"
+        else
+          # Non-differential mode: just analyze version_old = current SHA
+          if [ -z "$version_old" ]; then
+            version_old=${{ steps.set_sha.outputs.commit_sha }}
+          fi
+          echo "Running in non-differential mode"
+          echo "Analyzing single commit: $version_old"
+        fi
+
         # Build command
-        CMD="python main.py -p ${{ inputs.project_repo }} -v ${{ inputs.version_old }} -pm ${{ inputs.package_manager }}"
+        CMD="python main.py -p ${{ inputs.project_repo }} -v $version_old -pm ${{ inputs.package_manager }}"
 
         if [ "${{ inputs.differential_analysis }}" == "true" ]; then
-            CMD="$CMD -vn ${{ inputs.version_new }} -d"
+            CMD="$CMD -vn $version_new -d"
         fi
 
         if [ -n "${{ inputs.name_match }}" ]; then
