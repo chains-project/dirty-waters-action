@@ -101,6 +101,7 @@ runs:
           echo "branch_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-$HEAD_REF" >> $GITHUB_OUTPUT
           echo "base_branch_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-$BASE_REF" >> $GITHUB_OUTPUT
         else
+          echo "GITHUB_EVENT_NAME is $GITHUB_EVENT_NAME"
           echo "commit_sha=$GITHUB_SHA" >> $GITHUB_OUTPUT
           BRANCH_NAME=${GITHUB_REF#refs/heads/}
           echo "branch_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-$BRANCH_NAME" >> $GITHUB_OUTPUT
