@@ -89,15 +89,22 @@ runs:
         npm install -g pnpm
         npm install -g yarn
 
-    - name: Set commit SHA
-      # Required because of isolation issues in PRs
+    - name: Set commit SHA and cache keys
       id: set_sha
       shell: bash
       run: |
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-          echo "commit_sha=$(jq -r .pull_request.head.sha $GITHUB_EVENT_PATH)" >> $GITHUB_OUTPUT
+          COMMIT_SHA=$(jq -r .pull_request.head.sha $GITHUB_EVENT_PATH)
+          BASE_REF=$(jq -r .pull_request.base.ref $GITHUB_EVENT_PATH)
+          HEAD_REF=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "branch_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-$HEAD_REF" >> $GITHUB_OUTPUT
+          echo "base_branch_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-$BASE_REF" >> $GITHUB_OUTPUT
         else
           echo "commit_sha=$GITHUB_SHA" >> $GITHUB_OUTPUT
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          echo "branch_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "base_branch_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-main" >> $GITHUB_OUTPUT
         fi
 
     - name: Restore cache
@@ -106,7 +113,10 @@ runs:
       if: ${{ inputs.ignore_cache != true && inputs.ignore_cache != 'true' }}
       with:
         path: tool/cache
-        key: dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ inputs.github_event_before }}
+        key: ${{ steps.set_sha.outputs.branch_key }}
+        restore-keys: |
+          ${{ steps.set_sha.outputs.base_branch_key }}
+          dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-
 
     - name: Create cache directory
       if: steps.restore-cache.outputs.cache-hit != 'true'
@@ -324,7 +334,7 @@ runs:
       if: always()
       with:
         path: tool/cache
-        key: dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-${{ steps.set_sha.outputs.commit_sha }}
+        key: ${{ steps.set_sha.outputs.branch_key }}
 
     - name: Break CI if analyses fail
       run: |
