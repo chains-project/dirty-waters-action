@@ -22,7 +22,7 @@ jobs:
           echo "LATEST_TAG=$LATEST_DIRTY_WATERS_TAG" >> $GITHUB_ENV
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5.2.0
+        uses: stefanzweifel/git-auto-commit-action@v6.0.1
         with:
           commit_message: "Bump dirty-waters version in action to ${{ env.LATEST_TAG }}"
           branch: ${{ github.head_ref }}
