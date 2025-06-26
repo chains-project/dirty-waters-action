@@ -100,7 +100,7 @@ runs:
           HEAD_REF=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
           echo "save_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-$COMMIT_SHA" >> $GITHUB_OUTPUT
-          echo "restore_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-$PREVIOUS_SHA" >> $GITHUB_OUTPUT
+          echo "restore_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-$PREVIOUS_SHA" >> $GITHUB_OUTPUT
           echo "fallback_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-$BASE_SHA" >> $GITHUB_OUTPUT
         else
           COMMIT_SHA=$GITHUB_SHA
