@@ -95,7 +95,7 @@ runs:
       run: |
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
           COMMIT_SHA=$(jq -r .pull_request.head.sha $GITHUB_EVENT_PATH)
-          PREVIOUS_SHA=$(git rev-parse $COMMIT_SHA^)
+          PREVIOUS_SHA=$(curl -s "https://api.github.com/repos/${{ inputs.project_repo }}/commits/$COMMIT_SHA" | jq -r '.parents[0].sha')
           BASE_SHA=$(jq -r .pull_request.base.sha $GITHUB_EVENT_PATH)
           HEAD_REF=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
@@ -104,7 +104,7 @@ runs:
           echo "fallback_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-$BASE_SHA" >> $GITHUB_OUTPUT
         else
           COMMIT_SHA=$GITHUB_SHA
-          PREVIOUS_SHA=$(git rev-parse $COMMIT_SHA^)
+          PREVIOUS_SHA=$(curl -s "https://api.github.com/repos/${{ inputs.project_repo }}/commits/$COMMIT_SHA" | jq -r '.parents[0].sha')
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
           echo "save_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-$COMMIT_SHA" >> $GITHUB_OUTPUT
           echo "restore_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-$PREVIOUS_SHA" >> $GITHUB_OUTPUT
