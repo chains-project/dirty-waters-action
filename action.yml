@@ -89,22 +89,16 @@ runs:
         npm install -g pnpm
         npm install -g yarn
 
-    - name: Set commit SHA and cache keys
+    - name: Set commit SHA
       id: set_sha
       shell: bash
       run: |
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
           COMMIT_SHA=$(jq -r .pull_request.head.sha $GITHUB_EVENT_PATH)
-          HEAD_REF=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
-          echo "cache_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-$HEAD_REF-latest" >> $GITHUB_OUTPUT
-          echo "fallback_prefix=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-" >> $GITHUB_OUTPUT
         else
           COMMIT_SHA=$GITHUB_SHA
-          BRANCH_NAME=${GITHUB_REF#refs/heads/}
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
-          echo "cache_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-$BRANCH_NAME-latest" >> $GITHUB_OUTPUT
-          echo "fallback_prefix=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-" >> $GITHUB_OUTPUT
         fi
 
     - name: Restore cache
@@ -113,9 +107,7 @@ runs:
       if: ${{ inputs.ignore_cache != true && inputs.ignore_cache != 'true' }}
       with:
         path: tool/cache
-        key: ${{ steps.set_sha.outputs.cache_key }}
-        restore-keys: |
-          ${{ steps.set_sha.outputs.fallback_prefix }}
+        key: dirty-waters-cache-${{ runner.os }}-${{ runner.arch }}-${GITHUB_REF#refs/heads}-
 
     - name: Create cache directory
       if: steps.restore-cache.outputs.cache-hit != 'true'
@@ -333,5 +325,5 @@ runs:
       if: always()
       with:
         path: tool/cache
-        key: ${{ steps.set_sha.outputs.cache_key }}
+        key: dirty-waters-cache-${{ runner.os }}-${{ runner.arch }}-${GITHUB_REF#refs/heads}-${{ github.run_id }}-${{ github.run_attempt }}
 
