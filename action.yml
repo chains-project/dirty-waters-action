@@ -115,7 +115,6 @@ runs:
         key: ${{ steps.set_sha.outputs.save_key }}
         restore-keys: |
           ${{ steps.set_sha.outputs.fallback_prefix }}
-          ${{ steps.set_sha.outputs.fallback_key }}
 
     - name: Create cache directory
       if: steps.restore-cache.outputs.cache-hit != 'true'
@@ -334,3 +333,11 @@ runs:
       with:
         path: tool/cache
         key: ${{ steps.set_sha.outputs.save_key }}
+
+    - name: Save cache on fallback
+      uses: actions/cache/save@v4.2.3
+      if: always()
+      with:
+        path: tool/cache
+        key: ${{ steps.set_sha.outputs.fallback_prefix }}
+
