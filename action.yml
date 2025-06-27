@@ -127,7 +127,7 @@ runs:
         git clone https://github.com/chains-project/dirty-waters.git
         cd dirty-waters
         # The version is pinned to the latest dirty-waters release at the time of the action release
-        DIRTY_WATERS_VERSION="v0.97.0"
+        DIRTY_WATERS_VERSION="v0.103.0"
         git checkout $DIRTY_WATERS_VERSION
         pip install -r requirements.txt
 
@@ -333,11 +333,4 @@ runs:
       with:
         path: tool/cache
         key: ${{ steps.set_sha.outputs.save_key }}
-
-    - name: Save cache on fallback
-      uses: actions/cache/save@v4.2.3
-      if: always()
-      with:
-        path: tool/cache
-        key: ${{ steps.set_sha.outputs.fallback_prefix }}
 
