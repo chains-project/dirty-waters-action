@@ -95,14 +95,15 @@ runs:
       run: |
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
           COMMIT_SHA=$(jq -r .pull_request.head.sha $GITHUB_EVENT_PATH)
-          BASE_SHA=$(jq -r .pull_request.base.sha $GITHUB_EVENT_PATH)
           HEAD_REF=$(jq -r .pull_request.head.ref $GITHUB_EVENT_PATH)
           echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
-          echo "save_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-$HEAD_REF-$COMMIT_SHA" >> $GITHUB_OUTPUT
-          echo "fallback_prefix=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-$HEAD_REF" >> $GITHUB_OUTPUT
+          echo "cache_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-$HEAD_REF-latest" >> $GITHUB_OUTPUT
+          echo "fallback_prefix=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-branch-" >> $GITHUB_OUTPUT
         else
           COMMIT_SHA=$GITHUB_SHA
-          echo "save_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-$COMMIT_SHA" >> $GITHUB_OUTPUT
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "cache_key=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-$BRANCH_NAME-latest" >> $GITHUB_OUTPUT
           echo "fallback_prefix=dirty-waters-cache-${{ runner.os }}-${{ inputs.project_repo }}-" >> $GITHUB_OUTPUT
         fi
 
@@ -112,7 +113,7 @@ runs:
       if: ${{ inputs.ignore_cache != true && inputs.ignore_cache != 'true' }}
       with:
         path: tool/cache
-        key: ${{ steps.set_sha.outputs.save_key }}
+        key: ${{ steps.set_sha.outputs.cache_key }}
         restore-keys: |
           ${{ steps.set_sha.outputs.fallback_prefix }}
 
@@ -332,5 +333,5 @@ runs:
       if: always()
       with:
         path: tool/cache
-        key: ${{ steps.set_sha.outputs.save_key }}
+        key: ${{ steps.set_sha.outputs.cache_key }}
 
