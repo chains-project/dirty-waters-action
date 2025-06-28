@@ -93,6 +93,10 @@ runs:
       id: set_sha
       shell: bash
       run: |
+        DEFAULT_BRANCH=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+          "https://api.github.com/repos/${{ inputs.project_repo }}" | \
+          jq -r '.default_branch')
+        echo "default_branch=$DEFAULT_BRANCH" >> $GITHUB_OUTPUT
         echo "branch_name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
           COMMIT_SHA=$(jq -r .pull_request.head.sha $GITHUB_EVENT_PATH)
@@ -109,6 +113,8 @@ runs:
       with:
         path: tool/cache
         key: dirty-waters-cache-${{ runner.os }}-${{ runner.arch }}-${{ steps.set_sha.outputs.branch_name }}-
+        restore-keys: |
+          dirty-waters-cache-${{ runner.os }}-${{ runner.arch }}-${{ steps.set_sha.outputs.default_branch }}-
 
     - name: Create cache directory
       if: steps.restore-cache.outputs.cache-hit != 'true'
