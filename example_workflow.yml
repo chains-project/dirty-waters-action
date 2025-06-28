@@ -37,7 +37,7 @@ jobs:
 
       - name: Run Static Dirty Waters analysis
         id: static-analysis
-        uses: chains-project/dirty-waters-action@v1.11.51
+        uses: chains-project/dirty-waters-action@v1.11.52
         with:
           # example args, change as needed
           github_token: ${{ secrets.GITHUB_TOKEN }}
