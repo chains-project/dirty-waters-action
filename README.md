@@ -32,8 +32,8 @@ SSC issues currently checked for:
 | --------------------- | -------------------------------------------------------------------------------------------------- | -------- | -------------------------- |
 | github_token          |                                                                                                    | Yes      | -                          |
 | project_repo          | Repository name (owner/repo)                                                                       | No       | {{ github.repository }}    |
-| version_old           | Base version/ref to analyze,                                                                       | No       | HEAD                       |
-| version_new           | New version/ref for diff analysis                                                                  | No       | HEAD^                      |
+| version_old           | Base version/ref to analyze,                                                                       | No       | -                          |
+| version_new           | New version/ref for diff analysis                                                                  | No       | -                          |
 | differential_analysis | Whether to perform differential analysis (true/false)                                              | No       | false                      |
 | package_manager       | Package manager (npm, yarn-classic, yarn-berry, pnpm, maven)                                       | Yes      | -                          |
 | name_match            | Compare the package names with the name in the in the package.json file. Will slow down execution. | No       | false                      |
