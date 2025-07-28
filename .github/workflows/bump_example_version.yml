@@ -31,7 +31,7 @@ jobs:
           sed -i 's/chains-project\/dirty-waters-action@v[0-9.]\+/chains-project\/dirty-waters-action@'"$LATEST_TAG"'/g' ./example_workflow.yml
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5.2.0
+        uses: stefanzweifel/git-auto-commit-action@v6.0.1
         with:
           commit_message: "Bump dirty-waters-action version to ${{ env.LATEST_TAG }}"
           branch: ${{ github.head_ref }}
