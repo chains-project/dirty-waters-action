@@ -105,7 +105,7 @@ runs:
         fi
 
     - name: Restore cache
-      uses: actions/cache/restore@v4.2.4
+      uses: actions/cache/restore@v4.3.0
       id: restore-cache
       if: ${{ inputs.ignore_cache != true && inputs.ignore_cache != 'true' }}
       with:
@@ -326,7 +326,7 @@ runs:
         fi
 
     - name: Save cache
-      uses: actions/cache/save@v4.2.4
+      uses: actions/cache/save@v4.3.0
       if: always()
       with:
         path: tool/cache
